@@ -33,13 +33,13 @@ void scene_structure::display()
 	for (int k_step = 0; simulation_running ==true && k_step < N_step; ++k_step)
 	{
 		// Update the forces on each particle
-		//simulation_compute_force(cloth, parameters);
+		simulation_compute_force(cloth, parameters);
 
 		// One step of numerical integration
-		//simulation_numerical_integration(cloth, parameters, parameters.dt/N_step);
+		simulation_numerical_integration(cloth, parameters, parameters.dt/N_step);
 
 		// Apply the positional (and velocity) constraints
-		//simulation_apply_constraints(cloth, constraint);
+		simulation_apply_constraints(cloth, constraint);
 
 
 		simulation_compute_force(shape, parameters);

@@ -36,7 +36,7 @@ struct particle_parameters_structure
 
 };
 
-// Stores the buffers representing the cloth vertices
+// Stores the buffers representing the shape vertices
 struct shape_structure
 {    
     // Buffers are stored as 2D grid that can be accessed as grid(ku,kv)

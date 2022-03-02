@@ -29,31 +29,40 @@ void scene_structure::display(double elapsedTime)
 	shape.elapsedTime = elapsedTime;
 	// Simulation of the cloth
 	// ***************************************** //
-	int const N_step = 1; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-	for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
-	{
+	int const N_step = 7; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+	
+	// iteration for constraints only
+	
 		// Update the forces on each particle
-		simulation_compute_force(cloth, parameters);
+		//simulation_compute_force(cloth, parameters);
 
 		// One step of numerical integration
-		simulation_numerical_integration(cloth, parameters, parameters.dt / N_step);
+		//simulation_numerical_integration(cloth, parameters, parameters.dt / N_step);
 
 		// Apply the positional (and velocity) constraints
-		simulation_apply_constraints(cloth, constraint);
+		//simulation_apply_constraints(cloth, constraint);
 
 
 
 
 		simulation_compute_force(shape, parameters);
-
+		
+		cgp::buffer<vec3> prevX = {}; 
+		for (const particle_element& particle : shape.particles) {
+			prevX.push_back(particle.position);
+		}
 		// One step of numerical integration
-
-		preCalculations(shape);
+		
 		
 		simulation_numerical_integration(shape, parameters, parameters.dt / N_step);
+		//for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
+		//{
+			simulation_apply_constraints(shape, prevX, constraint);
+		//}
+		preCalculations(shape);
+		shapeMatching(shape, parameters, parameters.dt / N_step); //check parameters
 
-		simulation_apply_constraints(shape, constraint);
-
+		adjustVelocity(shape, prevX, parameters.dt / N_step);
 		
 
 		/*// Check if the simulation has not diverged - otherwise stop it
@@ -63,7 +72,7 @@ void scene_structure::display(double elapsedTime)
 			std::cout << " > The simulation is stoped" << std::endl;
 			simulation_running = false;
 		}*/
-	}
+	
 
 
 	// Cloth display

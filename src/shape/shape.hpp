@@ -9,7 +9,7 @@ struct particle_element
     cgp::vec3 position; // Position
     cgp::vec3 velocity; // Speed
     cgp::vec3 force; // Force
-    float mass = 0.01;
+    float mass = 0.0001;
     float rho;      // density at this particle position
     float pressure; // pressure at this particle position
 
@@ -49,6 +49,10 @@ struct shape_structure
     cgp::buffer<cgp::vec3> relativeLocations;
 
     cgp::mat3 optimalRotation; //current optimal rotation
+
+    cgp::mat3 A;//optimal linear transformation
+
+    cgp::mat3 Aqq;
 
     cgp::vec3 com; //current center of mass
     

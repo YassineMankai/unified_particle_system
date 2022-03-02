@@ -165,11 +165,10 @@ void simulation_compute_force(shape_structure& shape, simulation_parameters cons
 	// Gravity
 	const vec3 g = { 0,0,-9.81f };
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
-		
-		shape.particles[pIndex].force = shape.particles[pIndex].mass * g;
-		
+			shape.particles[pIndex].force = shape.particles[pIndex].mass * g;
 
 	}
+
 }
 
 void calculateOptimalRotation(shape_structure& shape) {
@@ -240,11 +239,11 @@ void calculateOptimalRotation(shape_structure& shape) {
 		result = result/det(result);
 	}
 
-
-
-
 	shape.optimalRotation = result;	
-	
+	shape.A = Apq * shape.Aqq;
+
+	shape.A = shape.A / pow(cgp::det(shape.A), 1.f / 3.f);
+
 }
 
 void calculateCurrentCom(shape_structure& shape) {
@@ -254,8 +253,8 @@ void calculateCurrentCom(shape_structure& shape) {
 		res =res+ particle.position;
 	}
 	// you need to divide by N here
-	shape.com = res/N;
-
+	res = res/N;
+	shape.com = res;
 }
 
 void preCalculations(shape_structure& shape) {
@@ -266,39 +265,63 @@ void preCalculations(shape_structure& shape) {
 
 void simulation_numerical_integration(shape_structure& shape, simulation_parameters const& parameters, float dt)
 {
-	const float alpha =1;
+
 	int const N = shape.particles.size();
-	//std::cout << shape.optimalRotation << std::endl;
-	
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
-		
+
 		vec3& v = shape.particles[pIndex].velocity;
 		vec3& x = shape.particles[pIndex].position;
-		vec3 g = shape.optimalRotation * (shape.relativeLocations[pIndex]) + shape.com;
+
+
+		vec3 g = (shape.optimalRotation * 1.0f + shape.A * 0.f) * (shape.relativeLocations[pIndex]) + shape.com;
 		vec3 const& f = shape.particles[pIndex].force;
 		float m = shape.particles[pIndex].mass;
-		v = v + dt * f / m + (alpha / dt) * (g - x);
-		x = x+ dt * v;
+		v = v + dt * f / m ; //simplification needed
+		x = x + dt * v;
 	}
 
 }
 
+void shapeMatching(shape_structure& shape, simulation_parameters const& parameters, float dt) {
+	const float alpha = 0.75;
+	int const N = shape.particles.size();
+	for (int pIndex = 0; pIndex < N; ++pIndex) {
+		vec3& v = shape.particles[pIndex].velocity;
+		vec3& x = shape.particles[pIndex].position;
+		vec3 g = (shape.optimalRotation * 0.5f + shape.A * 0.5f) * (shape.relativeLocations[pIndex]) + shape.com;
+		x = x + alpha * (g - x);
+	}
+}
 
-void simulation_apply_constraints(shape_structure& shape, constraint_structure const& constraint)
+
+void simulation_apply_constraints(shape_structure& shape, cgp::buffer<vec3>& prevX, constraint_structure const& constraint)
 {
 	int const N = shape.particles.size();
 	const vec3 g = { 0,0,-9.81f };
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		vec3& v = shape.particles[pIndex].velocity;
 		vec3& p = shape.particles[pIndex].position;
-		if (p.z < constraint.ground_z) {
-			p.z = constraint.ground_z;
-			shape.particles[pIndex].force+= shape.particles[pIndex].mass * g;
-
-
+		if (p.z < constraint.ground_z+0.01) {
+			float dx = constraint.ground_z+0.01- p.z;
+			p.z += dx;
+			prevX[pIndex].z += dx;
 		}
 	}
 		
+}
+
+
+void adjustVelocity(shape_structure& shape, cgp::buffer<vec3>& prevX, float dt){
+	for (int index = 0; index < shape.particles.size(); index++) {
+		particle_element& particle = shape.particles[index];
+		particle.velocity = (particle.position - prevX[index]) / dt;
+		
+		if (norm(particle.position - prevX[index]) < 0.001) {
+			particle.position = prevX[index];
+		}
+		
+	}
+	
 }
 
 

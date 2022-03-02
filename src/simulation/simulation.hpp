@@ -47,8 +47,12 @@ void simulation_compute_force(shape_structure& shape, simulation_parameters cons
 // Perform 1 step of a semi-implicit integration with time step dt
 void simulation_numerical_integration(shape_structure& shape, simulation_parameters const& parameters, float dt);
 
+void shapeMatching(shape_structure& shape, simulation_parameters const& parameters, float dt);
+
+void adjustVelocity(shape_structure& shape, cgp::buffer<cgp::vec3>& prevX, float dt);
+
 // Apply the constraints (fixed position, obstacles) on the cloth position and velocity
-void simulation_apply_constraints(shape_structure& shape, constraint_structure const& constraint);
+void simulation_apply_constraints(shape_structure& shape, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint);
 
 void calculateOptimalRotation(shape_structure& shape);
 

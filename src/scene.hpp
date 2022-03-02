@@ -63,7 +63,7 @@ struct scene_structure {
 	// ****************************** //
 
 	void initialize();  // Standard initialization to be called before the animation loop
-	void display();     // The frame display to be called within the animation loop
+	void display(double elapsedTime);     // The frame display to be called within the animation loop
 	void display_gui(); // The display of the GUI, also called within the animation loop
 
 	void initialize_cloth(int N_sample); // Recompute the cloth from scratch

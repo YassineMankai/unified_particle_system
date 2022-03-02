@@ -16,7 +16,7 @@ struct position_contraint {
 	cgp::vec3 position;
 };
 
-
+//cloth constraint_structure
 struct constraint_structure
 {
 	float ground_z = 0.0f;                                   // Height of the flood

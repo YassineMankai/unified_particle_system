@@ -5,7 +5,7 @@ using namespace cgp;
 
 //void update_field_color(grid_2D<vec3>& field, buffer<particle_element> const& particles);
 
-void scene_structure::display()
+void scene_structure::display(double elapsedTime)
 {
 	// Basics common elements
 	// ***************************************** //
@@ -14,8 +14,8 @@ void scene_structure::display()
 	if (gui.display_frame)
 		draw(global_frame, environment);
 
-	
-	
+
+
 	// Elements of the scene: Obstacles (floor, sphere), and fixed position
 	// ***************************************** //
 	draw(obstacle_floor, environment);
@@ -26,28 +26,35 @@ void scene_structure::display()
 		draw(sphere_fixed_position, environment);
 	}
 
-
+	shape.elapsedTime = elapsedTime;
 	// Simulation of the cloth
 	// ***************************************** //
 	int const N_step = 1; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-	for (int k_step = 0; simulation_running ==true && k_step < N_step; ++k_step)
+	for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
 	{
 		// Update the forces on each particle
 		simulation_compute_force(cloth, parameters);
 
 		// One step of numerical integration
-		simulation_numerical_integration(cloth, parameters, parameters.dt/N_step);
+		simulation_numerical_integration(cloth, parameters, parameters.dt / N_step);
 
 		// Apply the positional (and velocity) constraints
 		simulation_apply_constraints(cloth, constraint);
 
 
+
+
 		simulation_compute_force(shape, parameters);
 
 		// One step of numerical integration
+
+		preCalculations(shape);
+		
 		simulation_numerical_integration(shape, parameters, parameters.dt / N_step);
 
 		simulation_apply_constraints(shape, constraint);
+
+		
 
 		/*// Check if the simulation has not diverged - otherwise stop it
 		bool const simulation_diverged = simulation_detect_divergence(cloth);
@@ -61,17 +68,17 @@ void scene_structure::display()
 
 	// Cloth display
 	// ***************************************** //
-	
+
 	// Prepare to display the updated cloth
 	cloth.update_normal();        // compute the new normals
 	cloth_drawable.update(cloth); // update the positions on the GPU
 
 	// Display the cloth
 	draw(cloth_drawable, environment);
-	if(gui.display_wireframe)
+	if (gui.display_wireframe)
 		draw_wireframe(cloth_drawable, environment);
 
-	
+
 	// Display particles
 	if (gui.display_particles) {
 		for (int k = 0; k < shape.particles.size(); ++k) {
@@ -127,7 +134,7 @@ void scene_structure::initialize()
 	field_quad.initialize(mesh_primitive_quadrangle({ -1,-1,0 }, { 1,-1,0 }, { 1,1,0 }, { -1,1,0 }), "Field Quad");
 	field_quad.shading.phong = { 1,0,0 };
 	field_quad.texture = opengl_load_texture_image(field);*/
-	
+
 	shape.initialize();
 	sphere_particle.initialize(mesh_primitive_sphere(), "Sphere particle");
 	sphere_particle.transform.scaling = 0.01f;
@@ -155,7 +162,7 @@ void scene_structure::display_gui()
 	ImGui::SliderFloat("Mass", &parameters.mass_total, 0.2f, 5.0f, "%.3f", 2.0f);
 
 	ImGui::Spacing(); ImGui::Spacing();
-	
+
 	reset |= ImGui::SliderInt("Cloth samples", &gui.N_sample_edge, 4, 80);
 
 	ImGui::Spacing(); ImGui::Spacing();

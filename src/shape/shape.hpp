@@ -9,7 +9,7 @@ struct particle_element
     cgp::vec3 position; // Position
     cgp::vec3 velocity; // Speed
     cgp::vec3 force; // Force
-
+    float mass = 0.01;
     float rho;      // density at this particle position
     float pressure; // pressure at this particle position
 
@@ -39,11 +39,19 @@ struct particle_parameters_structure
 // Stores the buffers representing the shape vertices
 struct shape_structure
 {    
+
+
+    double elapsedTime = 0.0;
     // Buffers are stored as 2D grid that can be accessed as grid(ku,kv)
     particle_parameters_structure p_parameters; //particle parameters
     cgp::buffer<particle_element> particles;      // Storage of the particles
-    
+    cgp::vec3 com0; //intial center of mass
+    cgp::buffer<cgp::vec3> relativeLocations;
 
+    cgp::mat3 optimalRotation; //current optimal rotation
+
+    cgp::vec3 com; //current center of mass
+    
 
     void initialize(float c = 0.3f);  // fill the shape with particles
 };

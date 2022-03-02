@@ -162,104 +162,143 @@ bool simulation_detect_divergence(cloth_structure const& cloth)
 void simulation_compute_force(shape_structure& shape, simulation_parameters const& parameters)
 {
 	size_t const N = shape.particles.size();       // total number of vertices
-
-	// Retrive simulation parameter
-	float const K = parameters.K;              // spring stifness
-	float const m = parameters.mass_total / N; // mass of a particle
-	float const mu = parameters.mu;            // damping coefficient
-	//float const	L0 = 1.0f / (N_edge - 1.0f);   // rest length between two direct neighboring particle
-
-
 	// Gravity
 	const vec3 g = { 0,0,-9.81f };
-	for (int pIndex = 0; pIndex < N; ++pIndex)
-		shape.particles[pIndex].force = m * g;
+	for (int pIndex = 0; pIndex < N; ++pIndex) {
+		
+		shape.particles[pIndex].force = shape.particles[pIndex].mass * g;
+		
 
-	/*// Drag
-	for (int ku = 0; ku < N_edge; ++ku)
-		for (int kv = 0; kv < N_edge; ++kv)
-			force(ku, kv) += -mu * m * velocity(ku, kv);
+	}
+}
+
+void calculateOptimalRotation(shape_structure& shape) {
+	
+	cgp::mat3 Apq = cgp::mat3();
+	cgp::mat3 p = cgp::mat3();
+	cgp::mat3 q = cgp::mat3();
+	for (int i = 0; i < shape.particles.size();i++) {
+		const particle_element& particle = shape.particles[i];
+		p(0, 0) = particle.position.x-shape.com.x;
+		p(1, 0) = particle.position.y-shape.com.y;
+		p(2, 0) = particle.position.z-shape.com.z;
+
+		q(0, 0) = shape.relativeLocations[i].x;
+		q(0, 1) = shape.relativeLocations[i].y;
+		q(0, 2) = shape.relativeLocations[i].z;
+		
+		Apq += particle.mass * p * q;
+	}
+	cgp::mat3 sym = transpose(Apq) * Apq;
+	Eigen::MatrixXd A(3,3);
+	A(0, 0) = sym(0, 0);
+	A(0, 1) = sym(0, 1);
+	A(0, 2) = sym(0, 2);
+
+	A(1, 0) = sym(1, 0);
+	A(1, 1) = sym(1, 1);
+	A(1, 2) = sym(1, 2);
+
+	A(2, 0) = sym(2, 0);
+	A(2, 1) = sym(2, 1);
+	A(2, 2) = sym(2, 2);
+	
+
+	Eigen::EigenSolver <Eigen::MatrixXd > es(A);
+	Eigen::MatrixXcd Dc =es.eigenvalues().asDiagonal();
+	Eigen::MatrixXcd Vc =es.eigenvectors();
+	
+	Eigen::MatrixXd D = Dc.real();
+	Eigen::MatrixXd V = Vc.real();
+	
+	D(0, 0) =1.f / sqrt(D(0, 0));
+
+	D(1, 1) = 1.f / sqrt(D(1, 1));
+	D(2, 2) = 1.f / sqrt(D(2, 2));
+	
+	Eigen::MatrixXd Sinv = (V * D * V.inverse());
+
+	cgp::mat3 S_ = cgp::mat3();
+	
+	S_(0, 0) = Sinv(0, 0);
+	S_(0, 1) = Sinv(0, 1);
+	S_(0, 2) = Sinv(0, 2);
 
 
-	// TO DO: Add spring forces ...
-	for (int ku = 0; ku < N_edge; ++ku) {
-		for (int kv = 0; kv < N_edge; ++kv) {
-			for (int du = -2; du <= 2; du++) {
-				for (int dv = -2; dv <= 2; dv++) {
-					if (std::abs(du) + std::abs(dv) > 2 || std::abs(du) + std::abs(dv) == 0)
-						continue;
-					int n_ku = ku + du;
-					int n_kv = kv + dv;
-					if (n_ku >= 0 && n_ku < N_edge && n_kv >= 0 && n_kv < N_edge) {
-						vec3 diff = position(n_ku, n_kv) - position(ku, kv);
-						float diff_norm = norm(diff);
-						vec3 diff_normalized = normalize(diff);
-						force(ku, kv) += (K * (diff_norm - (sqrt(std::abs(du) * std::abs(du) + std::abs(dv) * std::abs(dv))) * L0)) * diff_normalized;
-					}
-				}
-			}
-		}
+	S_(1, 0) = Sinv(1, 0);
+	S_(1, 1) = Sinv(1, 1);
+	S_(1, 2) = Sinv(1, 2);
+
+
+	S_(2, 0) = Sinv(2, 0);
+	S_(2, 1) = Sinv(2, 1);
+	S_(2, 2) = Sinv(2, 2);
+
+	cgp::mat3 result = Apq * S_;
+
+	if (det(result) < 0) {
+		result = result/det(result);
 	}
 
-	for (int ku = 0; ku < N_edge; ++ku) {
-		for (int kv = 0; kv < N_edge; ++kv) {
-			force(ku, kv) += parameters.wind.magnitude * dot(cloth.normal(ku, kv), parameters.wind.direction) * m * cloth.normal(ku, kv);
-		}
-	}*/
+
+
+
+	shape.optimalRotation = result;	
+	
+}
+
+void calculateCurrentCom(shape_structure& shape) {
+	cgp::vec3 res = cgp::vec3(0.0, 0.0, 0.0);
+	const int N = shape.particles.size();
+	for (const particle_element& particle : shape.particles) {
+		res =res+ particle.position;
+	}
+	// you need to divide by N here
+	shape.com = res/N;
+
+}
+
+void preCalculations(shape_structure& shape) {
+	calculateCurrentCom(shape);
+	calculateOptimalRotation(shape);
+	
 }
 
 void simulation_numerical_integration(shape_structure& shape, simulation_parameters const& parameters, float dt)
 {
+	const float alpha =1;
 	int const N = shape.particles.size();
-	float const m = parameters.mass_total / static_cast<float>(N);
-
+	//std::cout << shape.optimalRotation << std::endl;
+	
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
-
+		
 		vec3& v = shape.particles[pIndex].velocity;
-		vec3& p = shape.particles[pIndex].position;
+		vec3& x = shape.particles[pIndex].position;
+		vec3 g = shape.optimalRotation * (shape.relativeLocations[pIndex]) + shape.com;
 		vec3 const& f = shape.particles[pIndex].force;
-
-		// Standard semi-implicit numerical integration
-		v = v + dt * f / m;
-		p = p + dt * v;
+		float m = shape.particles[pIndex].mass;
+		v = v + dt * f / m + (alpha / dt) * (g - x);
+		x = x+ dt * v;
 	}
 
 }
 
+
 void simulation_apply_constraints(shape_structure& shape, constraint_structure const& constraint)
 {
 	int const N = shape.particles.size();
-	/*
-	// Fixed positions of the cloth
-	for (auto const& it : constraint.fixed_sample) {
-		position_contraint c = it.second;
-		cloth.position(c.ku, c.kv) = c.position; // set the position to the fixed one
-	}
-	*/
-	// To do: apply external constraints
-	// For all vertex:
-	//   If vertex is below floor level ...
-	//   If vertex is inside collision sphere ...
+	const vec3 g = { 0,0,-9.81f };
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		vec3& v = shape.particles[pIndex].velocity;
 		vec3& p = shape.particles[pIndex].position;
-		if (norm(constraint.sphere.center - p) < constraint.sphere.radius + 0.01) {
-			vec3 dir = normalize(p - constraint.sphere.center);
-			p = constraint.sphere.center + (constraint.sphere.radius + 0.01) * dir;
-			vec3 vpar = dot(v, dir) * dir;
-			vec3 vn = v - vpar;
-			v = vn;
-		}
-		else if (p.z < constraint.ground_z) {
-			p.z = constraint.ground_z + 0.0005;
+		if (p.z < constraint.ground_z) {
+			p.z = constraint.ground_z;
+			shape.particles[pIndex].force+= shape.particles[pIndex].mass * g;
 
-			vec3 vn = { 0,0,v.z };
-			vec3 vplanar = { v.x,v.y,0 };
-			v = vplanar;
 
 		}
 	}
-
+		
 }
 
 

@@ -1,6 +1,7 @@
 
 #include "cgp/cgp.hpp" // Give access to the complete CGP library
 #include <iostream> 
+#include <chrono>
 
 // Custom scene of this code
 #include "scene.hpp"
@@ -45,7 +46,11 @@ int main(int, char* argv[])
 	scene.initialize();                                              
 	std::cout << "Initialization success" << std::endl;
 
+	
+	std::chrono::high_resolution_clock clock;
 
+	std::chrono::time_point<std::chrono::high_resolution_clock> before = clock.now();
+	
 	// ************************ //
 	//     Animation Loop
 	// ************************ //
@@ -60,7 +65,10 @@ int main(int, char* argv[])
 		scene.display_gui();
 
 		// Call the display of the scene
-		scene.display();
+		std::chrono::time_point<std::chrono::high_resolution_clock> after = clock.now();
+		double elapsedTime = (double)std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count();
+		scene.display(elapsedTime);
+		
 		
 		// End of ImGui display and handle GLFW events
 		helper_common.frame_end(window);

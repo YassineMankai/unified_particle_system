@@ -4,6 +4,13 @@
 #include "../cloth/cloth.hpp"
 #include "../shape/shape.hpp"
 #include "../constraint/constraint.hpp"
+#define EIGEN_NO_DEBUG
+#define EIGEN_INITIALIZE_MATRICES_BY_ZERO
+#include "../third_party/eigen/Eigen/EigenValues"
+#include "../third_party/eigen/Eigen/Eigen"
+
+
+
 
 
 struct simulation_parameters
@@ -42,3 +49,8 @@ void simulation_numerical_integration(shape_structure& shape, simulation_paramet
 
 // Apply the constraints (fixed position, obstacles) on the cloth position and velocity
 void simulation_apply_constraints(shape_structure& shape, constraint_structure const& constraint);
+
+void calculateOptimalRotation(shape_structure& shape);
+
+void calculateCurrentCom(shape_structure& shape);
+void preCalculations(shape_structure& shape);

@@ -5,123 +5,6 @@ using namespace cgp;
 
 
 
-// Fill value of force applied on each particle
-// - Gravity
-// - Drag
-// - Spring force
-// - Wind force
-void simulation_compute_force(cloth_structure& cloth, simulation_parameters const& parameters)
-{
-	// direct access to the variables
-	grid_2D<vec3>& force = cloth.force;
-	grid_2D<vec3> const& position = cloth.position;
-	grid_2D<vec3> const& velocity = cloth.velocity;
-
-	size_t const N = cloth.position.size();       // total number of vertices
-	size_t const N_edge = cloth.N_samples_edge(); // number of vertices in one dimension of the grid
-
-	// Retrive simulation parameter
-	float const K = parameters.K;              // spring stifness
-	float const m = parameters.mass_total / N; // mass of a particle
-	float const mu = parameters.mu;            // damping coefficient
-	float const	L0 = 1.0f / (N_edge - 1.0f);   // rest length between two direct neighboring particle
-
-
-	// Gravity
-	const vec3 g = { 0,0,-9.81f };
-	for (int ku = 0; ku < N_edge; ++ku)
-		for (int kv = 0; kv < N_edge; ++kv)
-			force(ku, kv) = m * g;
-
-	// Drag
-	for (int ku = 0; ku < N_edge; ++ku)
-		for (int kv = 0; kv < N_edge; ++kv)
-			force(ku, kv) += -mu * m * velocity(ku, kv);
-
-
-	// TO DO: Add spring forces ...
-	for (int ku = 0; ku < N_edge; ++ku) {
-		for (int kv = 0; kv < N_edge; ++kv) {
-			for (int du = -2; du <= 2; du++) {
-				for (int dv = -2; dv <= 2; dv++) {
-					if (std::abs(du) + std::abs(dv) > 2 || std::abs(du) + std::abs(dv) == 0)
-						continue;
-					int n_ku = ku + du;
-					int n_kv = kv + dv;
-					if (n_ku >= 0 && n_ku < N_edge && n_kv >= 0 && n_kv < N_edge) {
-						vec3 diff = position(n_ku, n_kv) - position(ku, kv);
-						float diff_norm = norm(diff);
-						vec3 diff_normalized = normalize(diff);
-						force(ku, kv) += (K * (diff_norm - (sqrt(std::abs(du) * std::abs(du) + std::abs(dv) * std::abs(dv))) * L0)) * diff_normalized;
-					}
-				}
-			}
-		}
-	}
-
-	for (int ku = 0; ku < N_edge; ++ku) {
-		for (int kv = 0; kv < N_edge; ++kv) {
-			force(ku, kv) += parameters.wind.magnitude * dot(cloth.normal(ku, kv), parameters.wind.direction) * m * cloth.normal(ku, kv);
-		}
-	}
-}
-
-void simulation_numerical_integration(cloth_structure& cloth, simulation_parameters const& parameters, float dt)
-{
-	int const N_edge = cloth.N_samples_edge();
-	float const m = parameters.mass_total / static_cast<float>(N_edge);
-
-	for (int ku = 0; ku < N_edge; ++ku) {
-		for (int kv = 0; kv < N_edge; ++kv) {
-			vec3& v = cloth.velocity(ku, kv);
-			vec3& p = cloth.position(ku, kv);
-			vec3 const& f = cloth.force(ku, kv);
-
-			// Standard semi-implicit numerical integration
-			v = v + dt * f / m;
-			p = p + dt * v;
-		}
-	}
-
-}
-
-void simulation_apply_constraints(cloth_structure& cloth, constraint_structure const& constraint)
-{
-	size_t const N_edge = cloth.N_samples_edge(); // number of vertices in one dimension of the grid
-
-	// Fixed positions of the cloth
-	for (auto const& it : constraint.fixed_sample) {
-		position_contraint c = it.second;
-		cloth.position(c.ku, c.kv) = c.position; // set the position to the fixed one
-	}
-
-	// To do: apply external constraints
-	// For all vertex:
-	//   If vertex is below floor level ...
-	//   If vertex is inside collision sphere ...
-	for (int ku = 0; ku < N_edge; ++ku) {
-		for (int kv = 0; kv < N_edge; ++kv) {
-			vec3& v = cloth.velocity(ku, kv);
-			vec3& p = cloth.position(ku, kv);
-			if (norm(constraint.sphere.center - p) < constraint.sphere.radius + 0.01) {
-				vec3 dir = normalize(p - constraint.sphere.center);
-				p = constraint.sphere.center + (constraint.sphere.radius + 0.01) * dir;
-				vec3 vpar = dot(v, dir) * dir;
-				vec3 vn = v - vpar;
-				v = vn;
-			}
-			else if (p.z < constraint.ground_z) {
-				p.z = constraint.ground_z + 0.0005;
-
-				vec3 vn = { 0,0,v.z };
-				vec3 vplanar = { v.x,v.y,0 };
-				v = vplanar;
-
-			}
-		}
-	}
-}
-
 bool simulation_detect_divergence(cloth_structure const& cloth)
 {
 	bool simulation_diverged = false;
@@ -313,15 +196,53 @@ void simulation_apply_constraints(shape_structure& shape, cgp::buffer<cgp::vec3>
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		vec3& v = shape.particles[pIndex].velocity;
 		vec3& p = shape.particles[pIndex].position;
+		for (const auto& wall : constraint.walls) {
+			
+			if (dot(p - wall.point, wall.normal) < 0.01) {
+				vec3 dp = (-dot(p - wall.point, wall.normal) + 0.01) * wall.normal;
+				p += dp;
+				prevX[pIndex] += dp;
+				shape.particles[pIndex].flagConstraint = true;
+				vec3 vn = dot(v, wall.normal) * wall.normal;
+				vec3 vpar = v - vn;
+				shape.particles[pIndex].dv = (0.5* vpar - vn) - v;
+			}
+		}
+		for (const auto& sphere : constraint.spheres) {
+
+			if (norm(sphere.center - p) < sphere.radius + 0.01) {
+				vec3 dir = normalize(p - sphere.center);
+				p = sphere.center + (sphere.radius + 0.01) * dir;
+				shape.particles[pIndex].flagConstraint = true;
+				vec3 vpar = dot(v, dir) * dir;
+				vec3 vn = v - vpar;
+				shape.particles[pIndex].dv = (vn - vpar) - v;
+			}
+		}
+		
+		
+		/*
 		if (norm(constraint.sphere.center - p) < constraint.sphere.radius + 0.01) {
 			vec3 dir = normalize(p - constraint.sphere.center);
 			p = constraint.sphere.center + (constraint.sphere.radius + 0.01) * dir;
+			shape.particles[pIndex].flag = true;
+			vec3 vpar = dot(v, dir) * dir;
+			vec3 vn = v - vpar;
+			shape.particles[pIndex].dv = (vn - vpar) - v;
 		}
 		else if (p.z < constraint.ground_z+0.01) {
 			float dx = constraint.ground_z+0.01- p.z;
 			p.z += dx;
 			prevX[pIndex].z += dx;
-		}
+			shape.particles[pIndex].flag = true;
+			shape.particles[pIndex].dv = (vec3(0.5 * v.x, 0.5 * v.y, -v.z)  ) - v;
+		}if (p.z < constraint.ground_z+0.01) {
+			float dx = constraint.ground_z+0.01- p.z;
+			p.z += dx;
+			prevX[pIndex].z += dx;
+			shape.particles[pIndex].flag = true;
+			shape.particles[pIndex].dv = (vec3(0.5 * v.x, 0.5 * v.y, -v.z)  ) - v;
+		}*/
 
 	}
 		
@@ -332,11 +253,15 @@ void adjustVelocity(shape_structure& shape, cgp::buffer<vec3>& prevX, float dt){
 	for (int index = 0; index < shape.particles.size(); index++) {
 		particle_element& particle = shape.particles[index];
 		particle.velocity = (particle.position - prevX[index]) / dt;
+		if (particle.flagConstraint) {
+			particle.flagConstraint = false;
+			particle.velocity += particle.dv;
+			particle.dv = vec3(0,0,0);
+		}
 		
 		if (norm(particle.position - prevX[index]) < 0.001) {
 			particle.position = prevX[index];
-		}
-		
+		}	
 	}
 	
 }

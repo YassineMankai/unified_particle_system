@@ -18,31 +18,30 @@ void scene_structure::display(double elapsedTime)
 
 	// Elements of the scene: Obstacles (floor, sphere), and fixed position
 	// ***************************************** //
-	draw(obstacle_floor, environment);
-	draw(obstacle_sphere, environment);
-	for (auto const& c : constraint.fixed_sample)
-	{
-		sphere_fixed_position.transform.translation = c.second.position;
-		draw(sphere_fixed_position, environment);
+	for (int wall_index = 0; wall_index < constraint.walls.size(); wall_index++) {
+		const auto& wall = constraint.walls[wall_index];
+		
+		if (wall_index > 0) {
+			obstacle_floor.transform.translation = 1.5* wall.normal;
+			obstacle_floor.transform.rotation = rotation_transform::from_axis_angle(vec3(wall.normal.y, wall.normal.x,0), Pi / 2);
+		}
+		else {
+			obstacle_floor.transform.translation = wall.point;
+			obstacle_floor.transform.rotation = cgp::rotation_transform::from_axis_angle({ 0,1, 0},0);
+		}
+		draw(obstacle_floor, environment);
 	}
-
+	for (const auto& sphere : constraint.spheres)
+	{
+		obstacle_sphere.transform.translation = sphere.center;
+		draw(obstacle_sphere, environment);
+	}
+	
 	shape.elapsedTime = elapsedTime;
-	// Simulation of the cloth
-	// ***************************************** //
+
 	int const N_step = 4; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
 	int const N_stabilization = 1; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
 	int const N_solver = 1; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-
-	// iteration for constraints only
-
-		// Update the forces on each particle
-		//simulation_compute_force(cloth, parameters);
-
-		// One step of numerical integration
-		//simulation_numerical_integration(cloth, parameters, parameters.dt / N_step);
-
-		// Apply the positional (and velocity) constraints
-		//simulation_apply_constraints(cloth, constraint);
 
 
 	for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
@@ -71,20 +70,6 @@ void scene_structure::display(double elapsedTime)
 
 	}
 
-
-	// Cloth display
-	// ***************************************** //
-
-	// Prepare to display the updated cloth
-	cloth.update_normal();        // compute the new normals
-	cloth_drawable.update(cloth); // update the positions on the GPU
-
-	// Display the cloth
-	draw(cloth_drawable, environment);
-	if (gui.display_wireframe)
-		draw_wireframe(cloth_drawable, environment);
-
-
 	// Display particles
 	if (gui.display_particles) {
 		for (int k = 0; k < shape.particles.size(); ++k) {
@@ -101,19 +86,6 @@ void scene_structure::display(double elapsedTime)
 	}*/
 }
 
-// Compute a new cloth in its initial position (can be called multiple times)
-void scene_structure::initialize_cloth(int N_sample)
-{
-	cloth.initialize(N_sample);
-	cloth_drawable.initialize(N_sample);
-	cloth_drawable.drawable.texture = cloth_texture;
-
-
-	constraint.fixed_sample.clear();
-	constraint.add_fixed_position(0, 0, cloth);
-	constraint.add_fixed_position(0, N_sample - 1, cloth);
-}
-
 void scene_structure::initialize()
 {
 	global_frame.initialize(mesh_primitive_frame(), "Frame");
@@ -121,27 +93,22 @@ void scene_structure::initialize()
 
 	obstacle_floor.initialize(mesh_primitive_quadrangle({ -1.5f,-1.5f,0 }, { -1.5f,1.5f,0 }, { 1.5f,1.5f,0 }, { 1.5f,-1.5f,0 }));
 	obstacle_floor.texture = opengl_load_texture_image("assets/wood.jpg");
-	obstacle_floor.transform.translation = { 0,0,constraint.ground_z };
+	obstacle_floor.transform.translation = { 0,0,0 }; //TODO display floor
 
 	obstacle_sphere.initialize(mesh_primitive_sphere());
-	obstacle_sphere.transform.translation = constraint.sphere.center;
-	obstacle_sphere.transform.scaling = constraint.sphere.radius;
+	obstacle_sphere.transform.translation = { 0.1f, 0.5f, 0.0f };
+	obstacle_sphere.transform.scaling = 0.15f;
 	obstacle_sphere.shading.color = { 1,0,0 };
 
-	sphere_fixed_position.initialize(mesh_primitive_sphere());
-	sphere_fixed_position.transform.scaling = 0.02f;
-	sphere_fixed_position.shading.color = { 0,0,1 };
-
 	
-	cloth_texture = opengl_load_texture_image("assets/cloth.jpg");
-	initialize_cloth(gui.N_sample_edge);
+	//cloth_texture = opengl_load_texture_image("assets/cloth.jpg");
 	
 	/*field.resize(30, 30);
 	field_quad.initialize(mesh_primitive_quadrangle({ -1,-1,0 }, { 1,-1,0 }, { 1,1,0 }, { -1,1,0 }), "Field Quad");
 	field_quad.shading.phong = { 1,0,0 };
 	field_quad.texture = opengl_load_texture_image(field);*/
 
-	shape.initialize(0.3f,cgp::vec3(0.7,1.3,0.0),75.f);
+	shape.initialize(0.3f, cgp::vec3(0.7, 1.3, 0.0), cgp::vec3(0, 75, 0));
 	sphere_particle.initialize(mesh_primitive_sphere(), "Sphere particle");
 	sphere_particle.transform.scaling = 0.01f;
 
@@ -154,7 +121,6 @@ void scene_structure::display_gui()
 	ImGui::Text("Display");
 	ImGui::Checkbox("Frame", &gui.display_frame);
 	ImGui::Checkbox("Wireframe", &gui.display_wireframe);
-	ImGui::Checkbox("Texture Cloth", &cloth_drawable.drawable.shading.use_texture);
 	ImGui::Checkbox("Particles", &gui.display_particles);
 	ImGui::Checkbox("Color", &gui.display_color);
 
@@ -174,8 +140,7 @@ void scene_structure::display_gui()
 	ImGui::Spacing(); ImGui::Spacing();
 	reset |= ImGui::Button("Restart");
 	if (reset) {
-		initialize_cloth(gui.N_sample_edge);
-		shape.initialize(0.3f, cgp::vec3(0.7, 1.3, 0.0), 75.f);
+		shape.initialize(0.3f, cgp::vec3(0.7, 1.3, 0.0), cgp::vec3(0,0,0));
 		simulation_running = true;
 	}
 

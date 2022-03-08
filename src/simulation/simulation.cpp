@@ -282,19 +282,31 @@ void simulation_numerical_integration(shape_structure& shape, simulation_paramet
 
 }
 
-void shapeMatching(shape_structure& shape, simulation_parameters const& parameters, float dt) {
-	const float alpha = 0.75;
+void shapeMatching(shape_structure& shape, simulation_parameters const& parameters, float di) {
+	const float alpha = 0.8;
 	int const N = shape.particles.size();
+	
+	cgp::buffer<vec3> g = {};
+	vec3 com = vec3(0,0,0);
+	for (int pIndex = 0; pIndex < N; ++pIndex) {
+		vec3 res = (shape.optimalRotation * 0.2f + shape.A * 0.8f) * (shape.relativeLocations[pIndex]);
+		g.push_back(res);
+		com += res;
+	}
+	com = com / N;
+	for (int pIndex = 0; pIndex < N; ++pIndex) {
+		g(pIndex) = g(pIndex) - com;
+	}
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		vec3& v = shape.particles[pIndex].velocity;
 		vec3& x = shape.particles[pIndex].position;
-		vec3 g = (shape.optimalRotation * 0.3f + shape.A * 0.7f) * (shape.relativeLocations[pIndex]) + shape.com;
-		x = x + alpha * (g - x);
+		vec3 target = g[pIndex] + shape.com;
+		x = x + di * alpha * (target - x);
 	}
 }
 
 
-void simulation_apply_constraints(shape_structure& shape, cgp::buffer<vec3>& prevX, constraint_structure const& constraint)
+void simulation_apply_constraints(shape_structure& shape, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float di)
 {
 	int const N = shape.particles.size();
 	const vec3 g = { 0,0,-9.81f };

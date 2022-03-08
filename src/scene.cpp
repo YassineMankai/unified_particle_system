@@ -29,10 +29,12 @@ void scene_structure::display(double elapsedTime)
 	shape.elapsedTime = elapsedTime;
 	// Simulation of the cloth
 	// ***************************************** //
-	int const N_step = 7; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-	
+	int const N_step = 4; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+	int const N_stabilization = 3; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+	int const N_solver = 6; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+
 	// iteration for constraints only
-	
+
 		// Update the forces on each particle
 		//simulation_compute_force(cloth, parameters);
 
@@ -43,36 +45,31 @@ void scene_structure::display(double elapsedTime)
 		//simulation_apply_constraints(cloth, constraint);
 
 
-
-
+	for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
+	{
+		float dt_step = parameters.dt / N_step;
 		simulation_compute_force(shape, parameters);
-		
-		cgp::buffer<vec3> prevX = {}; 
+
+		cgp::buffer<vec3> prevX = {};
 		for (const particle_element& particle : shape.particles) {
 			prevX.push_back(particle.position);
 		}
 		// One step of numerical integration
-		
-		
-		simulation_numerical_integration(shape, parameters, parameters.dt / N_step);
-		//for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
-		//{
-			simulation_apply_constraints(shape, prevX, constraint);
-		//}
-		preCalculations(shape);
-		shapeMatching(shape, parameters, parameters.dt / N_step); //check parameters
 
-		adjustVelocity(shape, prevX, parameters.dt / N_step);
-		
 
-		/*// Check if the simulation has not diverged - otherwise stop it
-		bool const simulation_diverged = simulation_detect_divergence(cloth);
-		if (simulation_diverged) {
-			std::cout << "\n *** Simulation has diverged ***" << std::endl;
-			std::cout << " > The simulation is stoped" << std::endl;
-			simulation_running = false;
-		}*/
-	
+		simulation_numerical_integration(shape, parameters, dt_step);
+		for (int k_stabilization = 0; simulation_running == true && k_stabilization < N_stabilization; ++k_stabilization)
+		{
+			simulation_apply_constraints(shape, prevX, constraint, 1);
+		}
+		for (int k_solver = 0; simulation_running == true && k_solver < N_solver; ++k_solver)
+		{
+			preCalculations(shape);
+			shapeMatching(shape, parameters, 1); //check parameters
+		}
+		adjustVelocity(shape, prevX, dt_step);
+
+	}
 
 
 	// Cloth display
@@ -164,7 +161,7 @@ void scene_structure::display_gui()
 	ImGui::Spacing(); ImGui::Spacing();
 
 	ImGui::Text("Simulation parameters");
-	ImGui::SliderFloat("Time step", &parameters.dt, 0.01f, 0.2f);
+	ImGui::SliderFloat("Time step", &parameters.dt, 0.001f, 0.2f);
 	ImGui::SliderFloat("Stiffness", &parameters.K, 1.0f, 80.0f, "%.3f", 2.0f);
 	ImGui::SliderFloat("Wind magnitude", &parameters.wind.magnitude, 0, 60, "%.3f", 2.0f);
 	ImGui::SliderFloat("Damping", &parameters.mu, 1.0f, 100.0f);

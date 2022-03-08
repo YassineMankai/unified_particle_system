@@ -9,9 +9,10 @@ struct particle_element
     cgp::vec3 position; // Position
     cgp::vec3 velocity; // Speed
     cgp::vec3 force; // Force
-    bool flag = false;
+    bool flagConstraint = false;
     cgp::vec3 dv; // Force
     float mass = 0.0001;
+    int phase;
     float rho;      // density at this particle position
     float pressure; // pressure at this particle position
 
@@ -51,5 +52,6 @@ struct shape_structure
     cgp::mat3 A;//optimal linear transformation
     cgp::mat3 Aqq;
     cgp::vec3 com; //current center of mass
-    void initialize(float c = 0.3f, cgp::vec3 globalPosition = cgp::vec3(0.0, 0.0, 0.0), float angle=0.f);  // fill the shape with particles
+
+    void initialize(float c = 0.3f, cgp::vec3 globalPosition = cgp::vec3(0.0, 0.0, 0.0),cgp::vec3 anglesEuler=cgp::vec3(0.0f,3.14/4,0.0));  // fill the shape with particles
 };

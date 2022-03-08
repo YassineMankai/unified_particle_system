@@ -202,7 +202,7 @@ void simulation_apply_constraints(shape_structure& shape, cgp::buffer<cgp::vec3>
 				vec3 dp = (-dot(p - wall.point, wall.normal) + 0.01) * wall.normal;
 				p += dp;
 				prevX[pIndex] += dp;
-				shape.particles[pIndex].flag = true;
+				shape.particles[pIndex].flagConstraint = true;
 				vec3 vn = dot(v, wall.normal) * wall.normal;
 				vec3 vpar = v - vn;
 				shape.particles[pIndex].dv = (0.5* vpar - vn) - v;
@@ -213,7 +213,7 @@ void simulation_apply_constraints(shape_structure& shape, cgp::buffer<cgp::vec3>
 			if (norm(sphere.center - p) < sphere.radius + 0.01) {
 				vec3 dir = normalize(p - sphere.center);
 				p = sphere.center + (sphere.radius + 0.01) * dir;
-				shape.particles[pIndex].flag = true;
+				shape.particles[pIndex].flagConstraint = true;
 				vec3 vpar = dot(v, dir) * dir;
 				vec3 vn = v - vpar;
 				shape.particles[pIndex].dv = (vn - vpar) - v;
@@ -253,8 +253,8 @@ void adjustVelocity(shape_structure& shape, cgp::buffer<vec3>& prevX, float dt){
 	for (int index = 0; index < shape.particles.size(); index++) {
 		particle_element& particle = shape.particles[index];
 		particle.velocity = (particle.position - prevX[index]) / dt;
-		if (particle.flag) {
-			particle.flag = false;
+		if (particle.flagConstraint) {
+			particle.flagConstraint = false;
 			particle.velocity += particle.dv;
 			particle.dv = vec3(0,0,0);
 		}

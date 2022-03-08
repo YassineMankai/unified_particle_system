@@ -108,7 +108,7 @@ void scene_structure::initialize()
 	field_quad.shading.phong = { 1,0,0 };
 	field_quad.texture = opengl_load_texture_image(field);*/
 
-	shape.initialize(0.3f,cgp::vec3(0.7,1.3,0.0),75.f);
+	shape.initialize(0.3f, cgp::vec3(0.7, 1.3, 0.0), cgp::vec3(0, 75, 0));
 	sphere_particle.initialize(mesh_primitive_sphere(), "Sphere particle");
 	sphere_particle.transform.scaling = 0.01f;
 
@@ -140,7 +140,7 @@ void scene_structure::display_gui()
 	ImGui::Spacing(); ImGui::Spacing();
 	reset |= ImGui::Button("Restart");
 	if (reset) {
-		shape.initialize(0.3f, cgp::vec3(0.7, 1.3, 0.0), 75.f);
+		shape.initialize(0.3f, cgp::vec3(0.7, 1.3, 0.0), cgp::vec3(0,0,0));
 		simulation_running = true;
 	}
 

@@ -3,7 +3,7 @@
 using namespace cgp;
 
 
-void shape_structure::initialize(float c)
+void shape_structure::initialize(float c, cgp::vec3 globalPosition,float angle)
 {
 	// Initial particle spacing (relative to h)
 	float const h = p_parameters.h;
@@ -24,7 +24,7 @@ void shape_structure::initialize(float c)
 				particle_element particle;
 				//particle.mass = x/10.f;
 				// rand_interval()
-				particle.position =vec3( x_p + h / 8.0f, y_p + h / 8.0f, z_p + h / 8.0f)+vec3(0.0,0.0,1.0f); // a zero value in z position will lead to a 2D simulation
+				particle.position =vec3( x_p + h / 8.0f, y_p + h / 8.0f, z_p + h / 8.0f)+vec3(0.0,0.0,1.0f)+globalPosition; // a zero value in z position will lead to a 2D simulation
 				centerOfMass += particle.position;
 				sum++;
 				particles.push_back(particle);
@@ -36,7 +36,7 @@ void shape_structure::initialize(float c)
 	com0 = centerOfMass;
 	
 	
-	rotation_transform rotation = rotation_transform::from_axis_angle(vec3(0.0, 1.0, 0.0), 75);
+	rotation_transform rotation = rotation_transform::from_axis_angle(vec3(0.0, 1.0, 0.0), angle);
 	affine_rt rt = rotation_around_center(rotation, com0);
 
 
@@ -83,3 +83,4 @@ void shape_structure::initialize(float c)
 
 
 }
+

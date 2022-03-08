@@ -135,16 +135,16 @@ void scene_structure::initialize()
 	sphere_fixed_position.transform.scaling = 0.02f;
 	sphere_fixed_position.shading.color = { 0,0,1 };
 
-
+	
 	cloth_texture = opengl_load_texture_image("assets/cloth.jpg");
 	initialize_cloth(gui.N_sample_edge);
-
+	
 	/*field.resize(30, 30);
 	field_quad.initialize(mesh_primitive_quadrangle({ -1,-1,0 }, { 1,-1,0 }, { 1,1,0 }, { -1,1,0 }), "Field Quad");
 	field_quad.shading.phong = { 1,0,0 };
 	field_quad.texture = opengl_load_texture_image(field);*/
 
-	shape.initialize();
+	shape.initialize(0.3f,cgp::vec3(0.7,1.3,0.0),75.f);
 	sphere_particle.initialize(mesh_primitive_sphere(), "Sphere particle");
 	sphere_particle.transform.scaling = 0.01f;
 
@@ -178,7 +178,7 @@ void scene_structure::display_gui()
 	reset |= ImGui::Button("Restart");
 	if (reset) {
 		initialize_cloth(gui.N_sample_edge);
-		shape.initialize();
+		shape.initialize(0.3f, cgp::vec3(0.7, 1.3, 0.0), 75.f);
 		simulation_running = true;
 	}
 

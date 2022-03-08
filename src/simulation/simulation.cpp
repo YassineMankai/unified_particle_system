@@ -273,7 +273,7 @@ void simulation_numerical_integration(shape_structure& shape, simulation_paramet
 		vec3& x = shape.particles[pIndex].position;
 
 
-		vec3 g = (shape.optimalRotation * 1.0f + shape.A * 0.f) * (shape.relativeLocations[pIndex]) + shape.com;
+		
 		vec3 const& f = shape.particles[pIndex].force;
 		float m = shape.particles[pIndex].mass;
 		v = v + dt * f / m ; //simplification needed
@@ -288,7 +288,7 @@ void shapeMatching(shape_structure& shape, simulation_parameters const& paramete
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		vec3& v = shape.particles[pIndex].velocity;
 		vec3& x = shape.particles[pIndex].position;
-		vec3 g = (shape.optimalRotation * 0.5f + shape.A * 0.5f) * (shape.relativeLocations[pIndex]) + shape.com;
+		vec3 g = (shape.optimalRotation * 0.3f + shape.A * 0.7f) * (shape.relativeLocations[pIndex]) + shape.com;
 		x = x + alpha * (g - x);
 	}
 }
@@ -301,11 +301,16 @@ void simulation_apply_constraints(shape_structure& shape, cgp::buffer<vec3>& pre
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		vec3& v = shape.particles[pIndex].velocity;
 		vec3& p = shape.particles[pIndex].position;
-		if (p.z < constraint.ground_z+0.01) {
+		if (norm(constraint.sphere.center - p) < constraint.sphere.radius + 0.01) {
+			vec3 dir = normalize(p - constraint.sphere.center);
+			p = constraint.sphere.center + (constraint.sphere.radius + 0.01) * dir;
+		}
+		else if (p.z < constraint.ground_z+0.01) {
 			float dx = constraint.ground_z+0.01- p.z;
 			p.z += dx;
 			prevX[pIndex].z += dx;
 		}
+
 	}
 		
 }

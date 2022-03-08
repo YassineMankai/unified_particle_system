@@ -39,23 +39,15 @@ struct particle_parameters_structure
 // Stores the buffers representing the shape vertices
 struct shape_structure
 {    
-
-
     double elapsedTime = 0.0;
     // Buffers are stored as 2D grid that can be accessed as grid(ku,kv)
     particle_parameters_structure p_parameters; //particle parameters
     cgp::buffer<particle_element> particles;      // Storage of the particles
     cgp::vec3 com0; //intial center of mass
     cgp::buffer<cgp::vec3> relativeLocations;
-
     cgp::mat3 optimalRotation; //current optimal rotation
-
     cgp::mat3 A;//optimal linear transformation
-
     cgp::mat3 Aqq;
-
     cgp::vec3 com; //current center of mass
-    
-
-    void initialize(float c = 0.3f);  // fill the shape with particles
+    void initialize(float c = 0.3f, cgp::vec3 globalPosition = cgp::vec3(0.0, 0.0, 0.0), float angle=0.f);  // fill the shape with particles
 };

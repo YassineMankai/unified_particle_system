@@ -30,8 +30,8 @@ void scene_structure::display(double elapsedTime)
 	// Simulation of the cloth
 	// ***************************************** //
 	int const N_step = 4; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-	int const N_stabilization = 3; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-	int const N_solver = 6; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+	int const N_stabilization = 1; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+	int const N_solver = 1; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
 
 	// iteration for constraints only
 

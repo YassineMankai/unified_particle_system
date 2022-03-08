@@ -15,7 +15,7 @@
 
 struct simulation_parameters
 {
-    float dt = 0.02f;        // time step for the numerical integration
+    float dt = 0.01f;        // time step for the numerical integration
     float mass_total = 1.0f; // total mass of the cloth
     float K = 10.0f;         // stiffness parameter
     float mu = 40.0f;        // damping parameter
@@ -47,12 +47,12 @@ void simulation_compute_force(shape_structure& shape, simulation_parameters cons
 // Perform 1 step of a semi-implicit integration with time step dt
 void simulation_numerical_integration(shape_structure& shape, simulation_parameters const& parameters, float dt);
 
-void shapeMatching(shape_structure& shape, simulation_parameters const& parameters, float dt);
+void shapeMatching(shape_structure& shape, simulation_parameters const& parameters, float di);
 
 void adjustVelocity(shape_structure& shape, cgp::buffer<cgp::vec3>& prevX, float dt);
 
 // Apply the constraints (fixed position, obstacles) on the cloth position and velocity
-void simulation_apply_constraints(shape_structure& shape, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint);
+void simulation_apply_constraints(shape_structure& shape, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint, float di);
 
 void calculateOptimalRotation(shape_structure& shape);
 

@@ -36,11 +36,8 @@ struct scene_structure {
 	// Display of the obstacles and constraints
 	cgp::mesh_drawable obstacle_floor;
 	cgp::mesh_drawable obstacle_sphere;
-	cgp::mesh_drawable sphere_fixed_position;
 
-	// Cloth related structures
-	cloth_structure cloth;                     // The values of the position, velocity, forces, etc, stored as a 2D grid
-	cloth_structure_drawable cloth_drawable;   // Helper structure to display the cloth as a mesh
+	// simulation related structures
 	simulation_parameters parameters;          // Stores the parameters of the simulation (stiffness, mass, damping, time step, etc)
 	constraint_structure constraint;           // Handle the parameters of the constraints (fixed vertices, floor and sphere)
 
@@ -65,8 +62,6 @@ struct scene_structure {
 	void initialize();  // Standard initialization to be called before the animation loop
 	void display(double elapsedTime);     // The frame display to be called within the animation loop
 	void display_gui(); // The display of the GUI, also called within the animation loop
-
-	void initialize_cloth(int N_sample); // Recompute the cloth from scratch
 };
 
 

@@ -9,6 +9,8 @@ struct particle_element
     cgp::vec3 position; // Position
     cgp::vec3 velocity; // Speed
     cgp::vec3 force; // Force
+    bool flag = false;
+    cgp::vec3 dv; // Force
     float mass = 0.0001;
     float rho;      // density at this particle position
     float pressure; // pressure at this particle position

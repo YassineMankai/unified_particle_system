@@ -38,6 +38,7 @@ struct scene_structure {
 	cgp::mesh_drawable obstacle_sphere;
 
 	// simulation related structures
+	particle_parameters_structure p_parameters;
 	simulation_parameters parameters;          // Stores the parameters of the simulation (stiffness, mass, damping, time step, etc)
 	constraint_structure constraint;           // Handle the parameters of the constraints (fixed vertices, floor and sphere)
 
@@ -55,6 +56,9 @@ struct scene_structure {
 	GLuint cloth_texture;             // Storage of the texture ID used for the cloth
 
 
+	cgp::buffer<particle_element> all_particles = {};
+	cgp::buffer<shape_structure> all_shapes = {};
+
 	// ****************************** //
 	// Functions
 	// ****************************** //
@@ -62,6 +66,7 @@ struct scene_structure {
 	void initialize();  // Standard initialization to be called before the animation loop
 	void display(double elapsedTime);     // The frame display to be called within the animation loop
 	void display_gui(); // The display of the GUI, also called within the animation loop
+	void addCube(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 };
 
 

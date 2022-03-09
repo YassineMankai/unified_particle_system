@@ -33,19 +33,22 @@ bool simulation_detect_divergence(cloth_structure const& cloth);
 
 
 // Fill the forces in the cloth given the position and velocity
-void simulation_compute_force(shape_structure& shape, simulation_parameters const& parameters);
+void simulation_compute_force(cgp::buffer<particle_element>& all_particles, simulation_parameters const& parameters);
 
 // Perform 1 step of a semi-implicit integration with time step dt
-void simulation_numerical_integration(shape_structure& shape, simulation_parameters const& parameters, float dt);
+void simulation_numerical_integration(cgp::buffer<particle_element>& all_particles, float dt);
 
-void shapeMatching(shape_structure& shape, simulation_parameters const& parameters, float di);
+void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
 
-void adjustVelocity(shape_structure& shape, cgp::buffer<cgp::vec3>& prevX, float dt);
+void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, float dt);
 
 // Apply the constraints (fixed position, obstacles) on the cloth position and velocity
-void simulation_apply_constraints(shape_structure& shape, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint, float di);
+void simulation_apply_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint, float di);
 
-void calculateOptimalRotation(shape_structure& shape);
+void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
 
-void calculateCurrentCom(shape_structure& shape);
-void preCalculations(shape_structure& shape);
+void calculateCurrentCom(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
+void preCalculations(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
+
+
+

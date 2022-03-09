@@ -47,11 +47,15 @@ struct shape_structure
     particle_parameters_structure p_parameters; //particle parameters
     cgp::buffer<particle_element> particles;      // Storage of the particles
     cgp::vec3 com0; //intial center of mass
+    int relativeLocationsOffset;
     cgp::buffer<cgp::vec3> relativeLocations;
     cgp::mat3 optimalRotation; //current optimal rotation
     cgp::mat3 A;//optimal linear transformation
     cgp::mat3 Aqq;
+    cgp::mat3 Apq=cgp::mat3();
     cgp::vec3 com; //current center of mass
+
+    int nbParticles;
 
     void initialize(float c = 0.3f, cgp::vec3 globalPosition = cgp::vec3(0.0, 0.0, 0.0),cgp::vec3 anglesEuler=cgp::vec3(0.0f,3.14/4,0.0));  // fill the shape with particles
 };

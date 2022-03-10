@@ -11,7 +11,7 @@ struct particle_element
     cgp::vec3 velocity; // Speed
     cgp::vec3 force; // Force
     bool flagConstraint = false;
-    cgp::vec3 dv; // Force
+    cgp::vec3 dv; // Velocity adjustment due to contact collision
     float mass = 0.0001;
     int phase;
     float rho;      // density at this particle position
@@ -24,7 +24,7 @@ struct particle_element
 struct particle_parameters_structure
 {
     // Influence distance of a particle (size of the kernel)
-    float h = 0.1f;
+    float h = 0.06f;
 
     // Rest density (normalized to 1 - real unit should be 1000kg/m^2)
     float rho0 = 1;

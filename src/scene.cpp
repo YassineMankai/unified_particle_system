@@ -5,6 +5,105 @@ using namespace cgp;
 
 //void update_field_color(grid_2D<vec3>& field, buffer<particle_element> const& particles);
 
+void scene_structure::setShapes() {
+	all_particles.clear();
+	all_shapes.clear();
+	if (parameters.quadratic){
+		addCubeQuadratic(0.3f, cgp::vec3(0.1f, 0.5f, 1.0), cgp::vec3(0, 0, 0));
+	}
+	else {
+		addCube(0.3f, cgp::vec3(0.1f, 0.5f, 1.0), cgp::vec3(0, 0, 0));
+		addCubeQuadratic(0.3f, cgp::vec3(0.1f, 0.5f, 1.5), cgp::vec3(0, 45, 45));
+	}
+}
+
+void scene_structure::initialize()
+{
+	global_frame.initialize(mesh_primitive_frame(), "Frame");
+	environment.camera.look_at({ 3.0f,2.0f,2.0f }, { 0,0,0 }, { 0,0,1 });
+
+	obstacle_floor.initialize(mesh_primitive_quadrangle({ -1.5f,-1.5f,0 }, { -1.5f,1.5f,0 }, { 1.5f,1.5f,0 }, { 1.5f,-1.5f,0 }));
+	obstacle_floor.texture = opengl_load_texture_image("assets/wood.jpg");
+	obstacle_floor.transform.translation = { 0,0,0 }; //TODO display floor
+
+	obstacle_sphere.initialize(mesh_primitive_sphere());
+	obstacle_sphere.transform.translation = { 0.1f, 0.5f, 0.0f };
+	obstacle_sphere.transform.scaling = 0.15f;
+	obstacle_sphere.shading.color = { 1,0,0 };
+
+
+	//cloth_texture = opengl_load_texture_image("assets/cloth.jpg");
+
+	/*field.resize(30, 30);
+	field_quad.initialize(mesh_primitive_quadrangle({ -1,-1,0 }, { 1,-1,0 }, { 1,1,0 }, { -1,1,0 }), "Field Quad");
+	field_quad.shading.phong = { 1,0,0 };
+	field_quad.texture = opengl_load_texture_image(field);*/
+
+	//shape.initialize(0.3f, cgp::vec3(0.7, 1.3, 0.0), cgp::vec3(0, 75, 0));
+
+	//addCube(0.3f, cgp::vec3(0.7, 1.3, 0.0), cgp::vec3(0, 75, 0));
+
+	setShapes();
+
+
+	sphere_particle.initialize(mesh_primitive_sphere(), "Sphere particle");
+	sphere_particle.transform.scaling = parameters.sphere_radius;
+}
+
+void scene_structure::simulate() {
+	
+	
+	int const N_step = 4; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+	int const N_stabilization = 4; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+	int const N_solver = 2; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+
+	for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
+	{
+		float dt_step = parameters.dt / N_step;
+		simulation_compute_force(all_particles, all_shapes, parameters);
+
+		cgp::buffer<vec3> prevX = {};
+		for (const particle_element& particle : all_particles) {
+			prevX.push_back(particle.position);
+		}
+		// One step of numerical integration
+
+
+		simulation_numerical_integration(all_particles, dt_step);
+
+		for (int k_stabilization = 0; simulation_running == true && k_stabilization < N_stabilization; ++k_stabilization)
+		{
+			simulation_apply_env_contact_constraints(all_particles, prevX, constraint, 1);
+			
+			cgp::vec3 maxBox(-5, -5, -5);
+			cgp::vec3 minBox(5, 5, 5);
+			for (int i = 0; i < all_particles.size(); i++) {
+				const particle_element& particle = all_particles[i];
+				maxBox.x = std::max(maxBox.x, particle.position.x);
+				minBox.x = std::min(minBox.x, particle.position.x);
+				maxBox.y = std::max(maxBox.y, particle.position.y);
+				minBox.y = std::min(minBox.y, particle.position.y);
+				maxBox.z = std::max(maxBox.z, particle.position.z);
+				minBox.z = std::min(minBox.z, particle.position.z);
+			}
+			regularGrid.initialize(minBox, maxBox, 10); // TODO: adapt grid size to context
+			for (int i = 0; i < all_particles.size(); i++) {
+				const particle_element& particle = all_particles[i];
+				regularGrid.insert(particle.position, i);
+			}
+			simulation_apply_particle_contact_constraints(all_particles, prevX, regularGrid, 1);
+		}
+
+		for (int k_solver = 0; simulation_running == true && k_solver < N_solver; ++k_solver)
+		{
+			preCalculations(all_particles, all_shapes);
+			shapeMatching(all_particles, all_shapes, parameters.alpha, parameters.beta); //check parameters
+		}
+
+		adjustVelocity(all_particles, prevX, dt_step);
+	}
+}
+
 void scene_structure::display(double elapsedTime)
 {
 	// Basics common elements
@@ -34,6 +133,7 @@ void scene_structure::display(double elapsedTime)
 		draw(obstacle_floor, environment);
 	}
 	*/
+	constraint.spheres[2].center = parameters.sphere3Pos;
 	obstacle_floor.transform.translation = vec3(0.0,0.0,0.0);
 	obstacle_floor.transform.rotation = cgp::rotation_transform::from_axis_angle({ 0,1, 0 }, 0);
 	draw(obstacle_floor, environment);
@@ -46,40 +146,7 @@ void scene_structure::display(double elapsedTime)
 
 	//shape.elapsedTime = elapsedTime;
 
-	int const N_step = 4; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-	int const N_stabilization = 1; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-	int const N_solver = 2; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-
-
-	for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
-	{
-		float dt_step = parameters.dt / N_step;
-		simulation_compute_force(all_particles,all_shapes, parameters);
-
-		cgp::buffer<vec3> prevX = {};
-		for (const particle_element& particle : all_particles) {
-			prevX.push_back(particle.position);
-		}
-		// One step of numerical integration
-
-
-		simulation_numerical_integration(all_particles, dt_step);
-
-		for (int k_stabilization = 0; simulation_running == true && k_stabilization < N_stabilization; ++k_stabilization)
-		{
-			simulation_apply_constraints(all_particles, prevX, constraint, 1);
-		}
-
-		for (int k_solver = 0; simulation_running == true && k_solver < N_solver; ++k_solver)
-		{
-			preCalculations(all_particles, all_shapes);
-			shapeMatching(all_particles, all_shapes, parameters.alpha,parameters.beta); //check parameters
-		}
-
-		adjustVelocity(all_particles, prevX, dt_step);
-
-
-	}
+	simulate();
 
 	// Display particles
 	if (gui.display_particles) {
@@ -95,45 +162,6 @@ void scene_structure::display(double elapsedTime)
 		opengl_update_texture_image(field_quad.texture, field);
 		draw(field_quad, environment);
 	}*/
-}
-
-void scene_structure::initialize()
-{
-	global_frame.initialize(mesh_primitive_frame(), "Frame");
-	environment.camera.look_at({ 3.0f,2.0f,2.0f }, { 0,0,0 }, { 0,0,1 });
-
-	obstacle_floor.initialize(mesh_primitive_quadrangle({ -1.5f,-1.5f,0 }, { -1.5f,1.5f,0 }, { 1.5f,1.5f,0 }, { 1.5f,-1.5f,0 }));
-	obstacle_floor.texture = opengl_load_texture_image("assets/wood.jpg");
-	obstacle_floor.transform.translation = { 0,0,0 }; //TODO display floor
-
-	obstacle_sphere.initialize(mesh_primitive_sphere());
-	obstacle_sphere.transform.translation = { 0.1f, 0.5f, 0.0f };
-	obstacle_sphere.transform.scaling = 0.15f;
-	obstacle_sphere.shading.color = { 1,0,0 };
-
-
-	//cloth_texture = opengl_load_texture_image("assets/cloth.jpg");
-
-	/*field.resize(30, 30);
-	field_quad.initialize(mesh_primitive_quadrangle({ -1,-1,0 }, { 1,-1,0 }, { 1,1,0 }, { -1,1,0 }), "Field Quad");
-	field_quad.shading.phong = { 1,0,0 };
-	field_quad.texture = opengl_load_texture_image(field);*/
-
-	//shape.initialize(0.3f, cgp::vec3(0.7, 1.3, 0.0), cgp::vec3(0, 75, 0));
-
-	//addCube(0.3f, cgp::vec3(0.7, 1.3, 0.0), cgp::vec3(0, 75, 0));
-
-	if (parameters.quadratic)
-		addCubeQuadratic(0.3f, cgp::vec3(0.1f, 0.5f, 1.0), cgp::vec3(0, 75, 0));
-	else {
-		addCube(0.3f, cgp::vec3(0.1f, 0.5f, 1.0), cgp::vec3(0, 75, 0));
-	}
-	//addCube(0.3f, cgp::vec3(-0.7, 0.5, 1.0), cgp::vec3(0, 75, 0));
-
-
-	sphere_particle.initialize(mesh_primitive_sphere(), "Sphere particle");
-	sphere_particle.transform.scaling = 0.01f;
-
 }
 
 void scene_structure::display_gui()
@@ -159,6 +187,9 @@ void scene_structure::display_gui()
 
 	ImGui::SliderFloat("beta", &parameters.beta, 0, 1, "%.3f", 2.0f);
 
+	ImGui::SliderFloat("SphereX", &parameters.sphere3Pos.x, -1.5, 1.5, "%.3f", 2.0f);
+	ImGui::SliderFloat("SphereY", &parameters.sphere3Pos.y, -1.5, 1.5, "%.3f", 2.0f);
+	ImGui::SliderFloat("SphereZ", &parameters.sphere3Pos.z, 0.1, 0.7, "%.3f", 2.0f);
 	ImGui::Checkbox("Quadratic", &parameters.quadratic);
 
 	ImGui::Spacing(); ImGui::Spacing();
@@ -168,15 +199,7 @@ void scene_structure::display_gui()
 	ImGui::Spacing(); ImGui::Spacing();
 	reset |= ImGui::Button("Restart");
 	if (reset) {
-		all_particles.clear();
-		all_shapes.clear();
-		if (parameters.quadratic)
-			addCubeQuadratic(0.3f, cgp::vec3(0.1f, 0.5f, 1.0), cgp::vec3(0, 75, 0));
-		else {
-			addCube(0.3f, cgp::vec3(0.1f, 0.5f, 1.0), cgp::vec3(0, 75, 0));
-		}
-		//addCube(0.3f, cgp::vec3(0.9, 1.3, 0.0), cgp::vec3(0, 75, 0));
-		//addCube(0.3f, cgp::vec3(1.3, 1.3, 0.0), cgp::vec3(0, 75, 0));
+		setShapes();
 		simulation_running = true;
 	}
 
@@ -280,7 +303,6 @@ void scene_structure::addCube(float c, cgp::vec3 globalPosition, cgp::vec3 angle
 	}
 	all_shapes.push_back(shape);
 }
-
 
 void scene_structure::addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler)
 {
@@ -394,10 +416,6 @@ void scene_structure::addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::v
 
 		shape.AqqQuad += particle.mass * p * q;
 	}
-
-
-
-
 
 	all_shapes.push_back(shape);
 }

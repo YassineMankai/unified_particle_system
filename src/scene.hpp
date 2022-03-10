@@ -5,6 +5,7 @@
 #include "cloth/cloth.hpp"
 #include "shape/custom_shape.hpp"
 #include "simulation/simulation.hpp"
+#include "uniform_grid/Rgrid.hpp"
 
 // The element of the GUI that are not already stored in other structures
 struct gui_parameters {
@@ -43,9 +44,10 @@ struct scene_structure {
 	constraint_structure constraint;           // Handle the parameters of the constraints (fixed vertices, floor and sphere)
 
 	// Particle system related structures
-	shape_structure shape;
 	cgp::mesh_drawable sphere_particle; // Sphere used to display a particle
-
+	cgp::buffer<particle_element> all_particles = {};
+	cgp::buffer<shape_structure> all_shapes = {};
+	Rgrid regularGrid;
 	/*
 	cgp::grid_2D<cgp::vec3> field;      // grid used to represent the volume of the fluid under the particles
 	cgp::mesh_drawable field_quad; // quad used to display this field color
@@ -56,14 +58,15 @@ struct scene_structure {
 	GLuint cloth_texture;             // Storage of the texture ID used for the cloth
 
 
-	cgp::buffer<particle_element> all_particles = {};
-	cgp::buffer<shape_structure> all_shapes = {};
+	
 
 	// ****************************** //
 	// Functions
 	// ****************************** //
 
 	void initialize();  // Standard initialization to be called before the animation loop
+	void setShapes();  // Creates the shapes used in the simulation
+	void simulate();  // 
 	void display(double elapsedTime);     // The frame display to be called within the animation loop
 	void display_gui(); // The display of the GUI, also called within the animation loop
 	void addCube(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);

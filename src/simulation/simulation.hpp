@@ -4,6 +4,7 @@
 #include "../cloth/cloth.hpp"
 #include "../shape/custom_shape.hpp"
 #include "../constraint/constraint.hpp"
+#include "../uniform_grid/Rgrid.hpp"
 #define EIGEN_NO_DEBUG
 #define EIGEN_INITIALIZE_MATRICES_BY_ZERO
 #include "../third_party/eigen/Eigen/EigenValues"
@@ -15,10 +16,11 @@
 
 struct simulation_parameters
 {
-    float dt = 0.01f;        // time step for the numerical integration
+    float dt = 0.008f;        // time step for the numerical integration
     float mass_total = 1.0f; // total mass of the cloth
     float K = 10.0f;         // stiffness parameter
     float mu = 40.0f;        // damping parameter
+    float sphere_radius = 0.01f;        // damping parameter
 
     //  Wind magnitude and direction
     struct {
@@ -27,8 +29,10 @@ struct simulation_parameters
     } wind;
 
     bool quadratic=false;
-    float alpha = 0.5;
-    float beta = 0.5;
+    float alpha = 0.913;
+    float beta = 0.02;
+
+    cgp::vec3 sphere3Pos = cgp::vec3(-0.7f, 1.25f, 0.4f);
 };
 
 
@@ -47,11 +51,14 @@ void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<sha
 void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, float dt);
 
 // Apply the constraints (fixed position, obstacles) on the cloth position and velocity
-void simulation_apply_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint, float di);
+void simulation_apply_env_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint, float di);
+
+void simulation_apply_particle_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX,  Rgrid const& grid, float di);
 
 void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
 
 void calculateCurrentCom(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
+
 void preCalculations(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
 
 

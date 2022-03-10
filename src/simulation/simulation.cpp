@@ -46,10 +46,9 @@ void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp:
 {
 	size_t const N = all_particles.size();
 	// Gravity
-	const vec3 g = { 0,0,-9.43f };
+	const vec3 g = { 0,0,-9.8f };
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		all_particles[pIndex].force = all_particles[pIndex].mass * g;
-		shape_structure& shape = all_shapes[all_particles[pIndex].phase];
 	}
 }
 
@@ -108,7 +107,7 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 			qQuad(0, 2) = q(2);
 
 			qQuad(0, 3) = q(3);
-			qQuad(0, 4) =q(4);
+			qQuad(0, 4) = q(4);
 			qQuad(0, 5) = q(5);
 
 			qQuad(0, 6) = q(6);
@@ -305,11 +304,10 @@ void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<sha
 		shape_structure& shape = all_shapes[particle.phase];
 		vec3 res;
 		if (!shape.isQuadratic) {
-			res = (shape.optimalRotation * beta + shape.A * (1-beta)) * (shape.relativeLocations[pIndex - shape.relativeLocationsOffset]);
-			
+			res = (shape.optimalRotation * beta + shape.A * (1-beta)) * (shape.relativeLocations[pIndex - shape.relativeLocationsOffset]);	
 		}
 		else {
-		res = ((1-beta)* shape.AQuad + beta* shape.optimalRotationQuad)*shape.qQuad[pIndex-shape.relativeLocationsOffset];
+			res = ((1-beta)* shape.AQuad + beta* shape.optimalRotationQuad)*shape.qQuad[pIndex-shape.relativeLocationsOffset];
 		}
 		g.push_back(res);
 		coms[particle.phase] += res;
@@ -334,7 +332,7 @@ void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<sha
 	}
 }
 
-void simulation_apply_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float di)
+void simulation_apply_env_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float di)
 {
 	int const N = all_particles.size();
 
@@ -364,11 +362,48 @@ void simulation_apply_constraints(cgp::buffer<particle_element>& all_particles, 
 				all_particles[pIndex].dv = (vn) - v;
 			}
 		}
-		
-	
+	}	
+}
 
+void simulation_apply_particle_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, Rgrid const& grid, float di)
+{
+	for (int p1 = 0; p1 < all_particles.size(); p1++)
+	{
+		particle_element& particle1 = all_particles[p1];
+		float const epsilon = 1e-5f;
+		cgp::buffer<int> neighborhood = grid.getNeighborhood(particle1.position);
+
+		for (int i = 0; i < neighborhood.size(); i++)
+		{
+			int p2 = neighborhood[i];
+			particle_element& particle2 = all_particles[p2];
+			if (particle1.phase == particle2.phase)
+				continue;
+			float detection = norm(particle1.position - particle2.position);
+			if (detection <= 0.01f * 2) { //TODO: use correct sphere radius
+				vec3 u = (particle1.position - particle2.position) / detection;
+				float diff = 0.01f * 2 - detection;
+				vec3 dx = (epsilon + diff / 2.0) * u;
+				particle1.position = particle1.position + dx;
+				prevX[i] += dx;
+				particle2.position = particle2.position - dx;
+				prevX[p2] -= dx;
+				float projected_relative_speed = dot(particle2.velocity - particle1.velocity, u);
+				particle1.flagConstraint = true;
+				particle2.flagConstraint = true;
+				if (std::abs(projected_relative_speed) > 0.1) {
+					particle1.dv += projected_relative_speed * u;
+					particle2.dv += - projected_relative_speed * u;
+				}
+				else
+				{
+					particle1.dv += - particle1.velocity / 3.f;
+					particle2.dv += - particle2.velocity /3.f;
+				}
+
+			}
+		}
 	}
-		
 }
 
 void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, float dt){

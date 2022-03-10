@@ -2,7 +2,7 @@
 
 #include "cgp/cgp.hpp"
 #include "../cloth/cloth.hpp"
-#include "../shape/shape.hpp"
+#include "../shape/custom_shape.hpp"
 #include "../constraint/constraint.hpp"
 #define EIGEN_NO_DEBUG
 #define EIGEN_INITIALIZE_MATRICES_BY_ZERO

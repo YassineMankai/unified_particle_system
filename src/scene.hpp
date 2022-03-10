@@ -3,7 +3,7 @@
 #include "cgp/cgp.hpp"
 
 #include "cloth/cloth.hpp"
-#include "shape/shape.hpp"
+#include "shape/custom_shape.hpp"
 #include "simulation/simulation.hpp"
 
 // The element of the GUI that are not already stored in other structures

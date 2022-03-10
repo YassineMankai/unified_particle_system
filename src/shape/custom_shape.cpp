@@ -1,4 +1,4 @@
-#include "shape.hpp"
+#include "custom_shape.hpp"
 
 using namespace cgp;
 

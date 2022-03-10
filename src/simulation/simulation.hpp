@@ -25,6 +25,10 @@ struct simulation_parameters
         float magnitude = 0.0f;
         cgp::vec3 direction = { 0,-1,0 };
     } wind;
+
+    bool quadratic=false;
+    float alpha = 0.5;
+    float beta = 0.5;
 };
 
 
@@ -33,12 +37,12 @@ bool simulation_detect_divergence(cloth_structure const& cloth);
 
 
 // Fill the forces in the cloth given the position and velocity
-void simulation_compute_force(cgp::buffer<particle_element>& all_particles, simulation_parameters const& parameters);
+void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, simulation_parameters const& parameters);
 
 // Perform 1 step of a semi-implicit integration with time step dt
 void simulation_numerical_integration(cgp::buffer<particle_element>& all_particles, float dt);
 
-void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
+void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, float alpha, float beta);
 
 void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, float dt);
 

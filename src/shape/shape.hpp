@@ -3,6 +3,7 @@
 #include "cgp/cgp.hpp"
 
 
+
 // SPH Particle
 struct particle_element
 {
@@ -23,7 +24,7 @@ struct particle_element
 struct particle_parameters_structure
 {
     // Influence distance of a particle (size of the kernel)
-    float h = 0.10f;
+    float h = 0.1f;
 
     // Rest density (normalized to 1 - real unit should be 1000kg/m^2)
     float rho0 = 1;
@@ -48,14 +49,30 @@ struct shape_structure
     cgp::buffer<particle_element> particles;      // Storage of the particles
     cgp::vec3 com0; //intial center of mass
     int relativeLocationsOffset;
+    int nbParticles;
+    bool isQuadratic = false;
     cgp::buffer<cgp::vec3> relativeLocations;
+    cgp::vec3 com; //current center of mass
+    /// <summary>
+    /// linear variables
+    /// </summary>
     cgp::mat3 optimalRotation; //current optimal rotation
     cgp::mat3 A;//optimal linear transformation
-    cgp::mat3 Aqq;
+    cgp::mat3 Aqq=cgp::mat3();
     cgp::mat3 Apq=cgp::mat3();
-    cgp::vec3 com; //current center of mass
+    
 
-    int nbParticles;
+    //quadratic variables
+
+    cgp::mat39 AQuad;
+    cgp::mat39 optimalRotationQuad;
+    cgp::mat9 AqqQuad=cgp::mat9();
+    cgp::mat39 ApqQuad;
+    cgp::buffer<cgp::vec9> qQuad = {};
+    
+
+
+    
 
     void initialize(float c = 0.3f, cgp::vec3 globalPosition = cgp::vec3(0.0, 0.0, 0.0),cgp::vec3 anglesEuler=cgp::vec3(0.0f,3.14/4,0.0));  // fill the shape with particles
 };

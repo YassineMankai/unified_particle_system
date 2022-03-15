@@ -16,7 +16,7 @@
 
 struct simulation_parameters
 {
-    float dt = 0.008f;        // time step for the numerical integration
+    float dt = 0.012f;        // time step for the numerical integration
     float mass_total = 1.0f; // total mass of the cloth
     float K = 10.0f;         // stiffness parameter
     float mu = 40.0f;        // damping parameter
@@ -30,7 +30,7 @@ struct simulation_parameters
 
     bool quadratic=false;
     float alpha = 0.913;
-    float beta = 0.02;
+    float beta = 1.0;
 
     cgp::vec3 sphere3Pos = cgp::vec3(-0.7f, 1.25f, 0.4f);
 };
@@ -48,6 +48,8 @@ void simulation_numerical_integration(cgp::buffer<particle_element>& all_particl
 
 void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, float alpha, float beta);
 
+void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, constraint_structure const& constraint);
+
 void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, float dt);
 
 // Apply the constraints (fixed position, obstacles) on the cloth position and velocity
@@ -60,6 +62,8 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 void calculateCurrentCom(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
 
 void preCalculations(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
+
+int phaseToShapeIndex(int phase);
 
 
 

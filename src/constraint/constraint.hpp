@@ -9,12 +9,8 @@ struct sphere_parameter {
 	float radius;
 };
 
-// Parameter attached to a fixed vertex (ku,kv) coordinates + 3D position
-struct position_contraint {
-	int ku;
-	int kv;
-	cgp::vec3 position;
-};
+
+
 
 struct plane_contraint {
 	cgp::vec3 point;
@@ -22,7 +18,7 @@ struct plane_contraint {
 };
 
 
-//cloth constraint_structure
+//constraint_structure
 struct constraint_structure
 {
 	float cubeSize = 1.5;
@@ -36,7 +32,9 @@ struct constraint_structure
 											{ {-0.7f, 1.25f, 0.4f}, 0.15f},
 	}; // Colliding sphere
 	
-	std::map<size_t, position_contraint> fixed_sample; // Storage of all fixed position of the cloth
+	std::map<int, cgp::vec3> fixed_sample; // Storage of all fixed position of the cloth
+
+	
 
 	// Add a new fixed position
 	void add_fixed_position(int ku, int kv, cloth_structure const& cloth);

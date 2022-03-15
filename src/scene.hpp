@@ -71,6 +71,16 @@ struct scene_structure {
 	void display_gui(); // The display of the GUI, also called within the animation loop
 	void addCube(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	void addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	void addSphere(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	void addPyramid(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	void addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+
+	int indexShapeToPhase(int indexShape,bool shapeMatching) {
+		if (shapeMatching)
+			return indexShape + 1;
+		else
+			return -(indexShape + 1);
+	}
 };
 
 

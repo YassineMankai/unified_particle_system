@@ -18,6 +18,7 @@ struct particle_element
     float pressure; // pressure at this particle position
 
     particle_element() : position{ 0,0,0 }, velocity{ 0,0,0 }, force{ 0,0,0 }, rho(0), pressure(0) {}
+
 };
 
 // SPH simulation parameters
@@ -43,6 +44,8 @@ struct particle_parameters_structure
 // Stores the buffers representing the shape vertices
 struct shape_structure
 {    
+
+    bool isShapeMatching = true; 
     double elapsedTime = 0.0;
     // Buffers are stored as 2D grid that can be accessed as grid(ku,kv)
     particle_parameters_structure p_parameters; //particle parameters
@@ -70,9 +73,14 @@ struct shape_structure
     cgp::mat39 ApqQuad;
     cgp::buffer<cgp::vec9> qQuad = {};
     
-
-
+    //cloth variable
+    int height = 0;
+    int width = 0;
+    float bendLength0;
+    float structLength0;
+    float shearLength0;
+    int getGlobalIndex(int i, int j);
+    int getNeighbour(int p_Index, int i,int j);
     
 
-    void initialize(float c = 0.3f, cgp::vec3 globalPosition = cgp::vec3(0.0, 0.0, 0.0),cgp::vec3 anglesEuler=cgp::vec3(0.0f,3.14/4,0.0));  // fill the shape with particles
 };

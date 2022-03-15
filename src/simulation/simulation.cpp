@@ -367,11 +367,14 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			
 			shape_structure& shape = all_shapes[phaseToShapeIndex(particle.phase)];
 			vec3& x = particle.position;
-			float k = 3.0; //stiffness parameter TODO put it in the parameters of simulation
+			vec3 dx = vec3(0.0, 0.0, 0.0);
+			
+			float k = 1.0; //stiffness parameter TODO put it in the parameters of simulation
 			int index1, index2, index3, index4;
 			float L;
 			//int numberOfConstraints = shape.width*shape.height*3; //204
-			int numberOfConstraints = 12; //204
+			int numberOfConstraints = 0; //204
+			
 			//structure constraints
 			L = shape.structLength0;
 			index1 = shape.getNeighbour(pIndex, 1, 0);		
@@ -383,22 +386,26 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			if (index1 != -1) {
 				const particle_element& p = all_particles[index1];
 				float  distance = norm(p.position - particle.position);
-				x += k *(distance - L) * normalize(p.position - particle.position)/numberOfConstraints;
+				dx += k *(distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			if (index2 != -1) {
 				const particle_element& p = all_particles[index2];
 				float  distance = norm(p.position - particle.position);
-				x += k  * (distance - L) * normalize(p.position - particle.position)/numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			if (index3 != -1) {
 				const particle_element& p = all_particles[index3];
 				float  distance = norm(p.position - particle.position);
-				x += k * (distance - L) * normalize(p.position - particle.position)/numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			if (index4 != -1) {
 				const particle_element& p = all_particles[index4];
 				float  distance = norm(p.position - particle.position);
-				x += k  * (distance - L) * normalize(p.position - particle.position)/numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			//shear constraints
 			L = shape.shearLength0;
@@ -411,22 +418,26 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			if (index1 != -1) {
 				const particle_element& p = all_particles[index1];
 				float  distance = norm(p.position - particle.position);
-				x += k * (distance - L) * normalize(p.position - particle.position) / numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			if (index2 != -1) {
 				const particle_element& p = all_particles[index2];
 				float  distance = norm(p.position - particle.position);
-				x += k * (distance - L) * normalize(p.position - particle.position) / numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			if (index3 != -1) {
 				const particle_element& p = all_particles[index3];
 				float  distance = norm(p.position - particle.position);
-				x += k * (distance - L) * normalize(p.position - particle.position) / numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			if (index4 != -1) {
 				const particle_element& p = all_particles[index4];
 				float  distance = norm(p.position - particle.position);
-				x += k * (distance - L) * normalize(p.position - particle.position) / numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 
 
@@ -442,23 +453,28 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			if (index1 != -1) {
 				const particle_element& p = all_particles[index1];
 				float  distance = norm(p.position - particle.position);
-				x += k * (distance - L) * normalize(p.position - particle.position) / numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			if (index2 != -1) {
 				const particle_element& p = all_particles[index2];
 				float  distance = norm(p.position - particle.position);
-				x += k * (distance - L) * normalize(p.position - particle.position) / numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			if (index3 != -1) {
 				const particle_element& p = all_particles[index3];
 				float  distance = norm(p.position - particle.position);
-				x += k * (distance - L) * normalize(p.position - particle.position) / numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
 			if (index4 != -1) {
 				const particle_element& p = all_particles[index4];
 				float  distance = norm(p.position - particle.position);
-				x += k * (distance - L) * normalize(p.position - particle.position) / numberOfConstraints;
+				dx += k * (distance - L) * normalize(p.position - particle.position);
+				numberOfConstraints++;
 			}
+			x += dx / numberOfConstraints;
 
 		}
 	}
@@ -469,8 +485,6 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 		particle_element& particle = all_particles[pIndex];
 		particle.position = it.second;
 	}
-
-	
 
 }
 
@@ -560,7 +574,9 @@ void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cg
 			particle.dv = vec3(0, 0, 0);
 		}
 
-		if (norm(particle.position - prevX[index]) < 0.0005) {
+
+		//can consider freezing time per shape, it depends on the simulation
+		if (norm(particle.position - prevX[index]) < 0.0001) {
 			particle.position = prevX[index];
 		}
 	}

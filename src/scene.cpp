@@ -47,7 +47,7 @@ void scene_structure::simulate() {
 
 	int const N_step = 6; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
 	int const N_stabilization = 2; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-	int const N_solver = 1; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+	int const N_solver = 3; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
 
 	for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
 	{
@@ -99,9 +99,7 @@ void scene_structure::simulate() {
 				
 				regularGrid.insert(particle.position, i);
 			}
-			
-			simulation_apply_particle_contact_constraints(all_particles, prevX, regularGrid, 1);
-			
+			simulation_apply_particle_contact_constraints(all_particles, prevX, regularGrid, 1);		
 		}
 		
 		
@@ -113,10 +111,11 @@ void scene_structure::simulate() {
 		{
 			preCalculations(all_particles, all_shapes);
 			shapeMatching(all_particles, all_shapes, parameters.alpha, parameters.beta); //check parameters
+			simulation_apply_shape_constraints(all_particles, all_shapes, constraint);
 		}
 		
 		//put here the constraints of the cloth for example
-		simulation_apply_shape_constraints(all_particles, all_shapes, constraint);
+		
 		// ****************************** //
 		// Coorecting velocity
 		// ****************************** //

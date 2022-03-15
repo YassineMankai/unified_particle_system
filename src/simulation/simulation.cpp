@@ -377,11 +377,10 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			int index1, index2, index3, index4;
 			float L;
 			//int numberOfConstraints = shape.width*shape.height*3; //204
-			int numberOfConstraints = 3.f; //204
+			int numberOfConstraints = 12; //204
 			//structure constraints
 			L = shape.structLength0;
-			index1 = shape.getNeighbour(pIndex, 1, 0);
-			
+			index1 = shape.getNeighbour(pIndex, 1, 0);		
 			index2 = shape.getNeighbour(pIndex, -1, 0);
 			index3 = shape.getNeighbour(pIndex, 0, 1);
 			index4 = shape.getNeighbour(pIndex, 0, -1);
@@ -410,7 +409,6 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			//shear constraints
 			L = shape.shearLength0;
 			index1 = shape.getNeighbour(pIndex, 1, 1);
-
 			index2 = shape.getNeighbour(pIndex, -1, -1);
 			index3 = shape.getNeighbour(pIndex, 1, -1);
 			index4 = shape.getNeighbour(pIndex, -1, 1);

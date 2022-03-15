@@ -4,12 +4,6 @@ using namespace cgp;
 
 
 
-int phaseToShapeIndex(int phase) {
-	return std::abs(phase) - 1;
-}
-
-
-
 
 bool simulation_detect_divergence(cloth_structure const& cloth)
 {

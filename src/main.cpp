@@ -1,8 +1,6 @@
-
-#include "cgp/cgp.hpp" // Give access to the complete CGP library
 #include <iostream> 
 #include <chrono>
-
+#include "cgp/cgp.hpp" // Give access to the complete CGP library
 // Custom scene of this code
 #include "scene.hpp"
 

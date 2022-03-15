@@ -33,12 +33,4 @@ struct constraint_structure
 	}; // Colliding sphere
 	
 	std::map<int, cgp::vec3> fixed_sample; // Storage of all fixed position of the cloth
-
-	
-
-	// Add a new fixed position
-	void add_fixed_position(int ku, int kv, cloth_structure const& cloth);
-	// Remove a fixed position
-	void remove_fixed_position(int ku, int kv);
-
 };

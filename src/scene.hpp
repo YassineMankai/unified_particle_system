@@ -6,6 +6,7 @@
 #include "shape/custom_shape.hpp"
 #include "simulation/simulation.hpp"
 #include "uniform_grid/Rgrid.hpp"
+#include "helpers_scene.hpp"
 
 // The element of the GUI that are not already stored in other structures
 struct gui_parameters {
@@ -39,7 +40,7 @@ struct scene_structure {
 	cgp::mesh_drawable obstacle_sphere;
 
 	// simulation related structures
-	particle_parameters_structure p_parameters;
+	scene_parameters scene_parameters;
 	simulation_parameters parameters;          // Stores the parameters of the simulation (stiffness, mass, damping, time step, etc)
 	constraint_structure constraint;           // Handle the parameters of the constraints (fixed vertices, floor and sphere)
 
@@ -74,13 +75,6 @@ struct scene_structure {
 	void addSphere(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	void addPyramid(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	void addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
-
-	int indexShapeToPhase(int indexShape,bool shapeMatching) {
-		if (shapeMatching)
-			return indexShape + 1;
-		else
-			return -(indexShape + 1);
-	}
 };
 
 

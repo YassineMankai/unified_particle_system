@@ -9,7 +9,7 @@
 #define EIGEN_INITIALIZE_MATRICES_BY_ZERO
 #include "../third_party/eigen/Eigen/EigenValues"
 #include "../third_party/eigen/Eigen/Eigen"
-
+#include "helpers_scene.hpp"
 
 
 
@@ -17,18 +17,7 @@
 struct simulation_parameters
 {
     float dt = 0.012f;        // time step for the numerical integration
-    float mass_total = 1.0f; // total mass of the cloth
-    float K = 10.0f;         // stiffness parameter
-    float mu = 40.0f;        // damping parameter
     float sphere_radius = 0.01f;        // damping parameter
-
-    //  Wind magnitude and direction
-    struct {
-        float magnitude = 0.0f;
-        cgp::vec3 direction = { 0,-1,0 };
-    } wind;
-
-    bool quadratic=false;
     float alpha = 0.913;
     float beta = 1.0;
 
@@ -62,8 +51,5 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 void calculateCurrentCom(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
 
 void preCalculations(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
-
-int phaseToShapeIndex(int phase);
-
 
 

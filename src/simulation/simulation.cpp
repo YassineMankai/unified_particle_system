@@ -375,6 +375,8 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			//int numberOfConstraints = shape.width*shape.height*3; //204
 			int numberOfConstraints = 0; //204
 			
+			cgp::buffer<float> lengths0 = { shape.structLength0,shape.shearLength0,shape.bendLength0 };
+
 			//structure constraints
 			L = shape.structLength0;
 			index1 = shape.getNeighbour(pIndex, 1, 0);		

@@ -125,14 +125,14 @@ void scene_structure::display(double elapsedTime)
 		draw(global_frame, environment);
 
 
-	/*
+	
 	// Elements of the scene: Obstacles (floor, sphere), and fixed position
 	// ***************************************** //
 	for (int wall_index = 0; wall_index < constraint.walls.size(); wall_index++) {
 		const auto& wall = constraint.walls[wall_index];
 
 		if (wall_index > 0) {
-			obstacle_floor.transform.translation = 1.5 * wall.normal;
+			obstacle_floor.transform.translation = 1.5 * wall.normal-cgp::vec3(0,0,1);
 			obstacle_floor.transform.rotation = rotation_transform::from_axis_angle(vec3(wall.normal.y, wall.normal.x, 0), Pi / 2);
 		}
 
@@ -143,7 +143,7 @@ void scene_structure::display(double elapsedTime)
 
 		draw(obstacle_floor, environment);
 	}
-	*/
+	
 	constraint.spheres[2].center = parameters.sphere3Pos;
 	obstacle_floor.transform.translation = vec3(0.0, 0.0, 0.0);
 	obstacle_floor.transform.rotation = cgp::rotation_transform::from_axis_angle({ 0,1, 0 }, 0);

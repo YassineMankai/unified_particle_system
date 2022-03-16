@@ -5,54 +5,12 @@ using namespace cgp;
 
 
 
-bool simulation_detect_divergence(cloth_structure const& cloth)
-{
-	bool simulation_diverged = false;
-	const size_t N = cloth.position.size();
-	for (size_t k = 0; simulation_diverged == false && k < N; ++k)
-	{
-		const float f = norm(cloth.force.data.at_unsafe(k));
-		const vec3& p = cloth.position.data.at_unsafe(k);
 
-		if (std::isnan(f)) // detect NaN in force
-		{
-			std::cout << "\n **** NaN detected in forces" << std::endl;
-			simulation_diverged = true;
-		}
 
-		if (f > 600.0f) // detect strong force magnitude
-		{
-			std::cout << "\n **** Warning : Strong force magnitude detected " << f << " at vertex " << k << " ****" << std::endl;
-			simulation_diverged = true;
-		}
 
-		if (std::isnan(p.x) || std::isnan(p.y) || std::isnan(p.z)) // detect NaN in position
-		{
-			std::cout << "\n **** NaN detected in positions" << std::endl;
-			simulation_diverged = true;
-		}
-	}
+// ################# Constraints #################
 
-	return simulation_diverged;
-}
-
-/// <summary>
-/// simulation of shape
-/// </summary>
-/// <param name="shape"></param>
-/// <param name="parameters"></param>
-
-void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, simulation_parameters const& parameters)
-{
-	size_t const N = all_particles.size();
-	// Gravity
-	const vec3 g = { 0,0,-9.8f };
-	for (int pIndex = 0; pIndex < N; ++pIndex) {
-		all_particles[pIndex].force = all_particles[pIndex].mass * g;
-
-	}
-}
-
+// Helper functions
 void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes) {
 	cgp::mat3 p = cgp::mat3();
 	cgp::mat3 q = cgp::mat3();
@@ -238,7 +196,6 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 		}
 	}
 }
-
 void calculateCurrentCom(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes) {
 
 	for (int i = 0; i < all_shapes.size(); i++) {
@@ -259,33 +216,36 @@ void calculateCurrentCom(cgp::buffer<particle_element>& all_particles, cgp::buff
 
 
 }
-
 void preCalculations(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes) {
 	calculateCurrentCom(all_particles, all_shapes);
 	calculateOptimalRotation(all_particles, all_shapes);
 }
 
-void simulation_numerical_integration(cgp::buffer<particle_element>& all_particles, float dt)
+float density_to_pressure(float rho, float rho0, float stiffness)
 {
-
-	int const N = all_particles.size();
-	for (int pIndex = 0; pIndex < N; ++pIndex) {
-
-		vec3& v = all_particles[pIndex].velocity;
-		vec3& x = all_particles[pIndex].position;
-
-
-
-		vec3 const& f = all_particles[pIndex].force;
-		float m = all_particles[pIndex].mass;
-		v = v + dt * f / m; //simplification needed
-		x = x + dt * v;
-	}
-
+	return stiffness * (rho - rho0);
+}
+float W_laplacian_viscosity(vec3 const& p_i, vec3 const& p_j, float h)
+{
+	float const r = norm(p_i - p_j);
+	assert_cgp_no_msg(r <= h);
+	return 45.0 / (3.14159f * std::pow(h, 6)) * (h - r);
+}
+vec3 W_gradient_pressure(vec3 const& p_i, vec3 const& p_j, float h)
+{
+	float const r = norm(p_i - p_j);
+	assert_cgp_no_msg(r <= h);
+	return -45.0 / (3.14159f * std::pow(h, 6)) * std::pow(h - r, 2) * (p_i - p_j) / r;
+}
+float W_density(vec3 const& p_i, const vec3& p_j, float h)
+{
+	float const r = norm(p_i - p_j);
+	assert_cgp_no_msg(r <= h);
+	return 315.0 / (64.0 * 3.14159f * std::pow(h, 9)) * std::pow(h * h - r * r, 3.0f);
 }
 
+// Constraints related to shape type (shape matching, cloth, fluid)
 void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, float alpha, float beta) {
-
 	//const float alpha = 0.3;
 	int const N = all_particles.size();
 
@@ -338,9 +298,7 @@ void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<sha
 			x = x + alpha * (target - x);
 		}
 	}
-
 }
-
 void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, constraint_structure const& constraint) {
 	for (int pIndex = 0; pIndex < all_particles.size(); pIndex++) {
 		particle_element& particle = all_particles[pIndex];
@@ -349,7 +307,7 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			vec3& x = particle.position;
 			vec3 dx = vec3(0.0, 0.0, 0.0);
 
-			float k = 1.2; //stiffness parameter TODO put it in the parameters of simulation
+			float k = 0.8; //stiffness parameter TODO put it in the parameters of simulation
 			int index1, index2, index3, index4;
 			float L;
 			//int numberOfConstraints = shape.width*shape.height*3; //204
@@ -457,16 +415,16 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			x += dx / numberOfConstraints;
 
 		}
-	}
+		else if (shape.type == FLUID) {
+			
 
-	//fixed points of the scene:
-	for (auto const& it : constraint.fixed_sample) {
-		int pIndex = it.first;
-		particle_element& particle = all_particles[pIndex];
-		particle.position = it.second;
+		}
 	}
 }
 
+
+
+// Constraints related to the environment (walls, obstacles && fixed points)
 void simulation_apply_env_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint)
 {
 	int const N = all_particles.size();
@@ -490,7 +448,7 @@ void simulation_apply_env_contact_constraints(cgp::buffer<particle_element>& all
 		for (const auto& sphere : constraint.spheres) {
 
 			if (norm(sphere.center - p) < sphere.radius + 0.01) {
-				vec3 dir = normalize(p - sphere.center);
+				vec3 dir = (p - sphere.center) / norm(p - sphere.center);
 				p = sphere.center + (sphere.radius + 0.01) * dir;
 				all_particles[pIndex].flagConstraint = true;
 				vec3 vpar = dot(v, dir) * dir;
@@ -499,8 +457,16 @@ void simulation_apply_env_contact_constraints(cgp::buffer<particle_element>& all
 			}
 		}
 	}
+
+	//fixed points of the scene:
+	for (auto const& it : constraint.fixed_sample) {
+		int pIndex = it.first;
+		particle_element& particle = all_particles[pIndex];
+		particle.position = it.second;
+	}
 }
 
+// Particle/Particle contact constraint
 void simulation_apply_particle_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, Rgrid const& grid, float dt)
 {
 	for (int p1 = 0; p1 < all_particles.size(); p1++)
@@ -541,6 +507,36 @@ void simulation_apply_particle_contact_constraints(cgp::buffer<particle_element>
 	}
 }
 
+
+// ################# Position based dynamics integration #################
+void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, simulation_parameters const& parameters)
+{
+	size_t const N = all_particles.size();
+	// Gravity
+	const vec3 g = { 0,0,-9.8f };
+	for (int pIndex = 0; pIndex < N; ++pIndex) {
+		all_particles[pIndex].force = all_particles[pIndex].mass * g;
+
+	}
+}
+void simulation_numerical_integration(cgp::buffer<particle_element>& all_particles, float dt)
+{
+
+	int const N = all_particles.size();
+	for (int pIndex = 0; pIndex < N; ++pIndex) {
+
+		vec3& v = all_particles[pIndex].velocity;
+		vec3& x = all_particles[pIndex].position;
+
+
+
+		vec3 const& f = all_particles[pIndex].force;
+		float m = all_particles[pIndex].mass;
+		v = v + dt * f / m; //simplification needed
+		x = x + dt * v;
+	}
+
+}
 void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, float dt) {
 	for (int index = 0; index < all_particles.size(); index++) {
 		particle_element& particle = all_particles[index];

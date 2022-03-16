@@ -73,7 +73,7 @@ struct scene_structure {
 	void addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	void addSphere(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	void addPyramid(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
-	void addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	void addCloth(float c_w, float c_h, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 };
 
 

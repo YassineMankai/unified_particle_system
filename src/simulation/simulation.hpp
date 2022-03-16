@@ -22,24 +22,18 @@ struct simulation_parameters
     cgp::vec3 sphere3Pos = cgp::vec3(-0.7f, 1.25f, 0.4f);
 };
 
-
-// Helper function that tries to detect if the simulation diverged 
-bool simulation_detect_divergence(cloth_structure const& cloth);
-
-
 // Fill the forces in the cloth given the position and velocity
 void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, simulation_parameters const& parameters);
 
 // Perform 1 step of a semi-implicit integration with time step dt
 void simulation_numerical_integration(cgp::buffer<particle_element>& all_particles, float dt);
 
+
+// Apply the constraints (fixed position, obstacles, shape matching, cloth constraints, fluid constraints, ...) 
 void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, float alpha, float beta);
 
 void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, constraint_structure const& constraint);
 
-void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, float dt);
-
-// Apply the constraints (fixed position, obstacles) on the cloth position and velocity
 void simulation_apply_env_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint);
 
 void simulation_apply_particle_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX,  Rgrid const& grid, float dt);
@@ -50,4 +44,5 @@ void calculateCurrentCom(cgp::buffer<particle_element>& all_particles, cgp::buff
 
 void preCalculations(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
 
-
+// Calculate a position based velocity and update it with a collision correction term if needed
+void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, float dt);

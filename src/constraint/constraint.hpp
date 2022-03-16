@@ -23,7 +23,6 @@ struct constraint_structure
 {
 	float cubeSize = 1.5;
 	cgp::buffer<plane_contraint> walls = { { {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 1.0f}},
-											{ {0.0f, 0.0f, 1.2f * cubeSize},  {0.0f, 0.0f, -1.0f}},
 											{ {cubeSize, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}},
 											{ {-cubeSize, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
 											{ {0.0f, cubeSize, 0.0f}, {0.0f, -1.0f, 0.0f}},

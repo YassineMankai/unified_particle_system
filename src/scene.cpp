@@ -7,8 +7,9 @@ void scene_structure::setShapes() {
 	all_particles.clear();
 	all_shapes.clear();
 
-	addCube(0.3f, cgp::vec3(-1.2f, 0.5f, 1.3), cgp::vec3(0, 0, 0));
-	addCloth(0.3f, cgp::vec3(-1.2f, 0.5f, 0.25f), cgp::vec3(0, 90, 0));
+	addCubeQuadratic(0.8f, cgp::vec3(-0.6f, 0.1f, 1.2), cgp::vec3(0, Pi / 3, 0));
+	addCube(0.8f, cgp::vec3(-0.8f, 0.1f, 1.2), cgp::vec3(0, Pi / 3, 0));
+	addCloth(2.8f, 4.2f, cgp::vec3(-0.65f, 0.1f, 0.25f), cgp::vec3(0, -Pi / 3, 0));
 	//addCloth(0.3f, cgp::vec3(0.9f, 0.5f, 0.25f), cgp::vec3(0, -90, 0));
 }
 
@@ -125,14 +126,13 @@ void scene_structure::display(double elapsedTime)
 		draw(global_frame, environment);
 
 
-	/*
 	// Elements of the scene: Obstacles (floor, sphere), and fixed position
-	// ***************************************** //
+	// * //
 	for (int wall_index = 0; wall_index < constraint.walls.size(); wall_index++) {
 		const auto& wall = constraint.walls[wall_index];
 
 		if (wall_index > 0) {
-			obstacle_floor.transform.translation = 1.5 * wall.normal;
+			obstacle_floor.transform.translation = 1.5 * wall.normal - cgp::vec3(0, 0, 1);
 			obstacle_floor.transform.rotation = rotation_transform::from_axis_angle(vec3(wall.normal.y, wall.normal.x, 0), Pi / 2);
 		}
 
@@ -143,11 +143,8 @@ void scene_structure::display(double elapsedTime)
 
 		draw(obstacle_floor, environment);
 	}
-	*/
+	
 	constraint.spheres[2].center = parameters.sphere3Pos;
-	obstacle_floor.transform.translation = vec3(0.0, 0.0, 0.0);
-	obstacle_floor.transform.rotation = cgp::rotation_transform::from_axis_angle({ 0,1, 0 }, 0);
-	draw(obstacle_floor, environment);
 	for (const auto& sphere : constraint.spheres)
 	{
 		obstacle_sphere.transform.translation = sphere.center;
@@ -195,9 +192,9 @@ void scene_structure::display_gui()
 	ImGui::SliderFloat("beta", &parameters.beta, 0, 1, "%.3f", 2.0f);
 	ImGui::SliderFloat("size", &scene_parameters.shape_size, 0, 0.2, " % .3f", 2.0f);
 
-	ImGui::SliderFloat("SphereX", &parameters.sphere3Pos.x, -1.5, 1.5, "%.3f", 2.0f);
-	ImGui::SliderFloat("SphereY", &parameters.sphere3Pos.y, -1.5, 1.5, "%.3f", 2.0f);
-	ImGui::SliderFloat("SphereZ", &parameters.sphere3Pos.z, 0.1, 0.7, "%.3f", 2.0f);
+	ImGui::SliderFloat("SphereX", &parameters.sphere3Pos.x, -1.8, 1.8, "%.3f", 1.0f);
+	ImGui::SliderFloat("SphereY", &parameters.sphere3Pos.y, -1.8, 1.8, "%.3f", 1.0f);
+	ImGui::SliderFloat("SphereZ", &parameters.sphere3Pos.z, -0.2, 1.8, "%.3f", 1.0f);
 
 	ImGui::Spacing(); ImGui::Spacing();
 
@@ -212,7 +209,7 @@ void scene_structure::display_gui()
 
 void scene_structure::addCube(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler) {
 	// Initial particle spacing (relative to h)
-	float const h = scene_parameters.shape_size;
+	float const h = scene_parameters.shape_size * c;
 	// Fill a square with particles
 
 	int indexShape = all_shapes.size();
@@ -237,7 +234,7 @@ void scene_structure::addCube(float c, cgp::vec3 globalPosition, cgp::vec3 angle
 				float z_p = z;
 				particle_element particle;
 				particle.phase = indexShape;
-				particle.position = vec3(x_p, y_p, z_p) + globalPosition; // a zero value in z position will lead to a 2D simulation
+				particle.position = vec3(x_p, y_p, z_p); // a zero value in z position will lead to a 2D simulation
 				centerOfMass += particle.position;
 				sum++;
 				all_particles.push_back(particle);
@@ -245,29 +242,10 @@ void scene_structure::addCube(float c, cgp::vec3 globalPosition, cgp::vec3 angle
 		}
 	}
 
-
-
-
-
-
 	//initializing center of mass
 	centerOfMass /= sum;
 	shape.com0 = centerOfMass;
 	shape.nbParticles = sum;
-
-	rotation_transform rotationy = rotation_transform::from_axis_angle(vec3(0.0, 1.0, 0.0), anglesEuler.y);
-	rotation_transform rotationx = rotation_transform::from_axis_angle(vec3(1.0, 0.0, 0.0), anglesEuler.x);
-	rotation_transform rotationz = rotation_transform::from_axis_angle(vec3(0.0, 0.0, 1.0), anglesEuler.z);
-
-	rotation_transform rotation = rotationx * rotationy * rotationz;
-
-	affine_rt rt = rotation_around_center(rotation, shape.com0);
-
-
-	for (int i = indexStart; i < indexStart + sum; i++) {
-		all_particles[i].position = (rotation * (all_particles[i].position - shape.com0)) + shape.com0;
-	};
-
 
 	//initializing relative locations
 	shape.relativeLocations = {};
@@ -291,12 +269,24 @@ void scene_structure::addCube(float c, cgp::vec3 globalPosition, cgp::vec3 angle
 
 		shape.Aqq += particle.mass * p * q;
 	}
+
+	rotation_transform rotationy = rotation_transform::from_axis_angle(vec3(0.0, 1.0, 0.0), anglesEuler.y);
+	rotation_transform rotationx = rotation_transform::from_axis_angle(vec3(1.0, 0.0, 0.0), anglesEuler.x);
+	rotation_transform rotationz = rotation_transform::from_axis_angle(vec3(0.0, 0.0, 1.0), anglesEuler.z);
+	rotation_transform rotation = rotationx * rotationy * rotationz;
+	affine_rt rt = rotation_around_center(rotation, shape.com0);
+	for (int i = indexStart; i < indexStart + sum; i++) {
+		all_particles[i].position = rt * all_particles[i].position + globalPosition;
+		//if (i - indexStart < 10 || indexStart + sum - i < 10)
+			//constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(i, all_particles[i].position + vec3(rand_interval(0, 0.03), rand_interval(0, 0.03), rand_interval(0, 0.03))));
+	};
+	
 	all_shapes.push_back(shape);
 }
 void scene_structure::addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler)
 {
 	// Initial particle spacing (relative to h)
-	float const h = scene_parameters.shape_size;
+	float const h = scene_parameters.shape_size * c;
 	// Fill a square with particles
 
 	int indexShape = all_shapes.size();
@@ -318,7 +308,7 @@ void scene_structure::addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::v
 				float z_p = z;
 				particle_element particle;
 				particle.phase = indexShape;
-				particle.position = vec3(x_p, y_p, z_p) + globalPosition; // a zero value in z position will lead to a 2D simulation
+				particle.position = vec3(x_p, y_p, z_p); // a zero value in z position will lead to a 2D simulation
 				centerOfMass += particle.position;
 				sum++;
 				all_particles.push_back(particle);
@@ -331,19 +321,6 @@ void scene_structure::addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::v
 	centerOfMass /= sum;
 	shape.com0 = centerOfMass;
 	shape.nbParticles = sum;
-
-	rotation_transform rotationy = rotation_transform::from_axis_angle(vec3(0.0, 1.0, 0.0), anglesEuler.y);
-	rotation_transform rotationx = rotation_transform::from_axis_angle(vec3(1.0, 0.0, 0.0), anglesEuler.x);
-	rotation_transform rotationz = rotation_transform::from_axis_angle(vec3(0.0, 0.0, 1.0), anglesEuler.z);
-
-	rotation_transform rotation = rotationx * rotationy * rotationz;
-
-	affine_rt rt = rotation_around_center(rotation, shape.com0);
-
-
-	for (int i = indexStart; i < indexStart + sum; i++) {
-		all_particles[i].position = (rotation * (all_particles[i].position - shape.com0)) + shape.com0;
-	};
 
 	//initializing relative locations
 	shape.relativeLocations = {};
@@ -400,6 +377,19 @@ void scene_structure::addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::v
 
 		shape.AqqQuad += particle.mass * p * q;
 	}
+
+	rotation_transform rotationy = rotation_transform::from_axis_angle(vec3(0.0, 1.0, 0.0), anglesEuler.y);
+	rotation_transform rotationx = rotation_transform::from_axis_angle(vec3(1.0, 0.0, 0.0), anglesEuler.x);
+	rotation_transform rotationz = rotation_transform::from_axis_angle(vec3(0.0, 0.0, 1.0), anglesEuler.z);
+	rotation_transform rotation = rotationx * rotationy * rotationz;
+	affine_rt rt = rotation_around_center(rotation, shape.com0);
+
+
+	for (int i = indexStart; i < indexStart + sum; i++) {
+		all_particles[i].position = rt * all_particles[i].position + globalPosition;
+		//if (i - indexStart < 10 || indexStart + sum - i < 10)
+			//constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(i, all_particles[i].position + vec3(rand_interval(0, 0.03), rand_interval(0, 0.03), rand_interval(0, 0.03))));
+	};
 
 	all_shapes.push_back(shape);
 }
@@ -558,7 +548,7 @@ void scene_structure::addPyramid(float c, cgp::vec3 globalPosition, cgp::vec3 an
 	}
 	all_shapes.push_back(shape);
 }
-void scene_structure::addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler) {
+void scene_structure::addCloth(float c_w, float c_h, cgp::vec3 globalPosition, cgp::vec3 anglesEuler) {
 	// Initial particle spacing (relative to h)
 	float const h = scene_parameters.shape_size;
 	// Fill a square with particles
@@ -575,9 +565,9 @@ void scene_structure::addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 angl
 	//this part is hard coded can be optimised with further parameters in cloth TODO
 
 
-	for (float z = -h * 3; z <= h * 3; z = z + step)
+	for (float z = -h * c_h; z <= h * c_h; z = z + step)
 	{
-		for (float y = -h * 3; y <= h * 3; y = y + step)
+		for (float y = -h * c_w; y <= h * c_w; y = y + step)
 		{
 
 			float y_p = y;
@@ -593,12 +583,12 @@ void scene_structure::addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 angl
 		}
 	}
 
-	for (float z = -h * 3; z <= h * 3; z = z + step)
+	for (float z = -h * c_h; z <= h * c_h; z = z + step)
 	{
 		shape.height++;
 	}
 
-	for (float y = -h * 3; y <= h * 3; y = y + step) {
+	for (float y = -h * c_w; y <= h * c_w; y = y + step) {
 		shape.width++;
 	}
 

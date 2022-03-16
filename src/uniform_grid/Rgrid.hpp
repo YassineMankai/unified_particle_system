@@ -5,7 +5,7 @@
 using namespace cgp;
 
 
-class Rgrid
+struct Rgrid
 {
 private:
     int m_resolution;
@@ -15,7 +15,8 @@ private:
     cgp::int3 posToIndex(cgp::vec3 pos) const;
 
 public:
-    void initialize(cgp::vec3 minBox, cgp::vec3 maxBox, int resolution);
+    void initialize(int resolution);
     void insert(vec3 pos, int index);
     cgp::buffer<int> getNeighborhood(vec3 pos) const;
+    void updateMinMax(cgp::vec3 pos);
 };

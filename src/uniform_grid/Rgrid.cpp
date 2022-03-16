@@ -2,13 +2,22 @@
 
 using namespace cgp;
 
-void Rgrid::initialize(cgp::vec3 minBox, cgp::vec3 maxBox, int resolution)
+void Rgrid::initialize(int resolution)
 {
     m_resolution = resolution;
     grid.clear();
     grid.resize(cgp::int3(resolution, resolution, resolution));
-    m_minBox = minBox;
-    m_maxBox = maxBox;
+    m_minBox = cgp::vec3(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+    m_maxBox = cgp::vec3(-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
+}
+
+void Rgrid::updateMinMax(cgp::vec3 pos) {
+    m_maxBox.x = std::max(m_maxBox.x, pos.x);
+    m_minBox.x = std::min(m_minBox.x, pos.x);
+    m_maxBox.y = std::max(m_maxBox.y, pos.y);
+    m_minBox.y = std::min(m_minBox.y, pos.y);
+    m_maxBox.z = std::max(m_maxBox.z, pos.z);
+    m_minBox.z = std::min(m_minBox.z, pos.z);
 }
 
 cgp::int3 Rgrid::posToIndex(cgp::vec3 pos) const

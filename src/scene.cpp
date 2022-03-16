@@ -9,7 +9,8 @@ void scene_structure::setShapes() {
 
 	//addPyramid(1.0f, cgp::vec3(-0.6f, 0.1f,1.6f), cgp::vec3(0, 0, 0));
 	//addCube(2.8f, 2.8f, 0.5f, cgp::vec3(-0.6f, 0.1f, 0.20f), cgp::vec3(0, 0, 0));
-	addCloth(3.2f, 3.2f, cgp::vec3(-0.65f, 0.1f, 0.4f), cgp::vec3(0, Pi / 2 + Pi/ 8, 0));
+	addCloth(3.2f, 2.2f, cgp::vec3(-0.65f, 0.1f, 0.4f), cgp::vec3(0, Pi / 2 + Pi/ 8, 0));
+	addCloth(3.2f, 2.2f, cgp::vec3(-0.35f, 0.1f, 0.4f), cgp::vec3(0, Pi / 2 - Pi/ 8, 0));
 	addCubeQuadratic(0.8f, 0.8f,0.8f, cgp::vec3(-0.65f, 0.1f, 1.20f), cgp::vec3(0, 0, 0));
 }
 
@@ -65,7 +66,7 @@ void scene_structure::simulate() {
 
 		for (int k_stabilization = 0; simulation_running == true && k_stabilization < parameters.N_stabilization; ++k_stabilization)
 		{
-			simulation_apply_contact_constraints(all_particles, prevX, constraint, dt_step / parameters.N_stabilization);
+			simulation_apply_contact_constraints(all_particles, all_shapes, prevX, constraint, dt_step / parameters.N_stabilization);
 		}
 		
 		//fixed points of the scene:

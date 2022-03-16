@@ -243,29 +243,6 @@ void preCalculations(cgp::buffer<particle_element>& all_particles, cgp::buffer<s
 	calculateOptimalRotation(all_particles, all_shapes);
 }
 
-float density_to_pressure(float rho, float rho0, float stiffness)
-{
-	return stiffness * (rho - rho0);
-}
-float W_laplacian_viscosity(vec3 const& p_i, vec3 const& p_j, float h)
-{
-	float const r = norm(p_i - p_j);
-	assert_cgp_no_msg(r <= h);
-	return 45.0 / (3.14159f * std::pow(h, 6)) * (h - r);
-}
-vec3 W_gradient_pressure(vec3 const& p_i, vec3 const& p_j, float h)
-{
-	float const r = norm(p_i - p_j);
-	assert_cgp_no_msg(r <= h);
-	return -45.0 / (3.14159f * std::pow(h, 6)) * std::pow(h - r, 2) * (p_i - p_j) / r;
-}
-float W_density(vec3 const& p_i, const vec3& p_j, float h)
-{
-	float const r = norm(p_i - p_j);
-	assert_cgp_no_msg(r <= h);
-	return 315.0 / (64.0 * 3.14159f * std::pow(h, 9)) * std::pow(h * h - r * r, 3.0f);
-}
-
 // Constraints related to shape type (shape matching, cloth, fluid)
 void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, float alpha, float beta) {
 	//const float alpha = 0.3;
@@ -437,33 +414,26 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			x += dx / numberOfConstraints;
 
 		}
-		else if (shape.type == FLUID) {
-			
-
-		}
 	}
 }
 
 // Constraints related to the environment (walls, obstacles && fixed points)
-void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float dt)
+void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, const cgp::buffer<shape_structure>& all_shapes, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float dt)
 {
-	cgp::vec3 maxBox(-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
-	cgp::vec3 minBox(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
-	for (int i = 0; i < all_particles.size(); i++) {
-		const particle_element& particle = all_particles[i];
-		maxBox.x = std::max(maxBox.x, particle.position.x);
-		minBox.x = std::min(minBox.x, particle.position.x);
-		maxBox.y = std::max(maxBox.y, particle.position.y);
-		minBox.y = std::min(minBox.y, particle.position.y);
-		maxBox.z = std::max(maxBox.z, particle.position.z);
-		minBox.z = std::min(minBox.z, particle.position.z);
+	std::vector<Rgrid> regularGrids;
+	for (int i = 0; i < all_shapes.size(); i++) {
+		regularGrids.push_back(Rgrid());
+		regularGrids.back().initialize(20);
 	}
-	Rgrid regularGrid;
-	regularGrid.initialize(minBox, maxBox, 20); // TODO: adapt grid size to context
 
 	for (int i = 0; i < all_particles.size(); i++) {
 		const particle_element& particle = all_particles[i];
-		regularGrid.insert(particle.position, i);
+		regularGrids[particle.phase].updateMinMax(particle.position);
+	}
+	
+	for (int i = 0; i < all_particles.size(); i++) {
+		const particle_element& particle = all_particles[i];
+		regularGrids[particle.phase].insert(particle.position, i);
 	}
 	
 	// env contacts
@@ -504,7 +474,10 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 	{
 		particle_element& particle1 = all_particles[p1];
 		float const epsilon = 1e-5f;
-		cgp::buffer<int> neighborhood = regularGrid.getNeighborhood(particle1.position);
+		cgp::buffer<int> neighborhood;
+		for (int i = 0; i < all_shapes.size(); i++) {
+			neighborhood.push_back(regularGrids[i].getNeighborhood(particle1.position));
+		}
 		for (int i = 0; i < neighborhood.size(); i++)
 		{
 			int p2 = neighborhood[i];
@@ -565,7 +538,6 @@ void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp:
 	const vec3 g = { 0,0,-9.8f };
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		all_particles[pIndex].force = all_particles[pIndex].mass * g;
-
 	}
 }
 void simulation_numerical_integration(cgp::buffer<particle_element>& all_particles, float dt)

@@ -26,7 +26,7 @@ struct scene_parameters
     float shape_size = 0.06f;
 };
 
-enum ShapeType {QUADRATIC, RIGID, CLOTH, FLUID};
+enum ShapeType {QUADRATIC, RIGID, CLOTH};
 
 // Stores the buffers representing the shape vertices
 struct shape_structure

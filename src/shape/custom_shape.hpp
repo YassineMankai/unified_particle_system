@@ -24,15 +24,15 @@ struct scene_parameters
     float shape_size = 0.06f;
 };
 
+enum ShapeType {QUADRATIC, RIGID, CLOTH, FLUID};
+
 // Stores the buffers representing the shape vertices
 struct shape_structure
 {    
-
-    bool isShapeMatching = true; 
+    ShapeType type;
     cgp::vec3 com0; //intial center of mass
     int relativeLocationsOffset;
     int nbParticles;
-    bool isQuadratic = false;
     cgp::buffer<cgp::vec3> relativeLocations;
     cgp::vec3 com; //current center of mass
     /// <summary>

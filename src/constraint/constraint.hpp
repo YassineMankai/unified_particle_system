@@ -22,13 +22,14 @@ struct plane_contraint {
 struct constraint_structure
 {
 	float cubeSize = 1.5;
-	cgp::buffer<plane_contraint> walls = { { {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 1.0f}}, 
+	cgp::buffer<plane_contraint> walls = { { {0.0f, 0.0f, 0.0f},  {0.0f, 0.0f, 1.0f}},
+											{ {0.0f, 0.0f, 1.2f * cubeSize},  {0.0f, 0.0f, -1.0f}},
 											{ {cubeSize, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}},
 											{ {-cubeSize, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
 											{ {0.0f, cubeSize, 0.0f}, {0.0f, -1.0f, 0.0f}},
 											{ {0.0f, -cubeSize, 0.0f}, {0.0f, 1.0f, 0.0f}} };// Height of the flood
-	cgp::buffer<sphere_parameter> spheres = { {{0.1f, 0.5f, 0.2f}, 0.15f},
-											{ {-0.37f, 0.5f, 0.2f}, 0.15f},
+	cgp::buffer<sphere_parameter> spheres = { {{1.1f, 0.5f, 0.2f}, 0.15f},
+											{ {-0.07f, 0.5f, 0.2f}, 0.15f},
 											{ {-0.7f, 1.25f, 0.4f}, 0.15f},
 	}; // Colliding sphere
 	

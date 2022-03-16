@@ -7,8 +7,9 @@ void scene_structure::setShapes() {
 	all_particles.clear();
 	all_shapes.clear();
 
-	addCube(0.3f, cgp::vec3(0.1f, 0.5f, 1.0), cgp::vec3(0, 45, 0));
-	addCloth(0.3f, cgp::vec3(-0.135f, 0.35f, 0.25), cgp::vec3(0, 0, 0));
+	addCube(0.3f, cgp::vec3(-1.2f, 0.5f, 1.3), cgp::vec3(0, 0, 0));
+	addCloth(0.3f, cgp::vec3(-1.2f, 0.5f, 0.25f), cgp::vec3(0, 90, 0));
+	//addCloth(0.3f, cgp::vec3(0.9f, 0.5f, 0.25f), cgp::vec3(0, -90, 0));
 }
 
 void scene_structure::initialize()
@@ -36,7 +37,7 @@ void scene_structure::simulate() {
 
 
 	int const N_step = 6; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-	int const N_stabilization = 2; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+	int const N_stabilization = 3; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
 	int const N_solver = 3; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
 
 	for (int k_step = 0; simulation_running == true && k_step < N_step; ++k_step)
@@ -69,7 +70,7 @@ void scene_structure::simulate() {
 
 		for (int k_stabilization = 0; simulation_running == true && k_stabilization < N_stabilization; ++k_stabilization)
 		{
-			simulation_apply_env_contact_constraints(all_particles, prevX, constraint, 1);
+			simulation_apply_env_contact_constraints(all_particles, prevX, constraint);
 
 			cgp::vec3 maxBox(-5, -5, -5);
 			cgp::vec3 minBox(5, 5, 5);
@@ -82,14 +83,13 @@ void scene_structure::simulate() {
 				maxBox.z = std::max(maxBox.z, particle.position.z);
 				minBox.z = std::min(minBox.z, particle.position.z);
 			}
-			regularGrid.initialize(minBox, maxBox, 10); // TODO: adapt grid size to context
+			regularGrid.initialize(minBox, maxBox, 20); // TODO: adapt grid size to context
 
 			for (int i = 0; i < all_particles.size(); i++) {
 				const particle_element& particle = all_particles[i];
-
 				regularGrid.insert(particle.position, i);
 			}
-			simulation_apply_particle_contact_constraints(all_particles, prevX, regularGrid, 1);
+			simulation_apply_particle_contact_constraints(all_particles, prevX, regularGrid, dt_step / N_stabilization);
 		}
 
 
@@ -216,12 +216,10 @@ void scene_structure::addCube(float c, cgp::vec3 globalPosition, cgp::vec3 angle
 	// Fill a square with particles
 
 	int indexShape = all_shapes.size();
-
 	int indexStart = all_particles.size();
 
-
-
 	shape_structure shape;
+	shape.type = RIGID;
 
 	shape.relativeLocationsOffset = indexStart;
 
@@ -238,7 +236,7 @@ void scene_structure::addCube(float c, cgp::vec3 globalPosition, cgp::vec3 angle
 				float y_p = y;
 				float z_p = z;
 				particle_element particle;
-				particle.phase = indexShapeToPhase(indexShape, shape.isShapeMatching);
+				particle.phase = indexShape;
 				particle.position = vec3(x_p, y_p, z_p) + globalPosition; // a zero value in z position will lead to a 2D simulation
 				centerOfMass += particle.position;
 				sum++;
@@ -305,7 +303,7 @@ void scene_structure::addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::v
 
 	int indexStart = all_particles.size();
 	shape_structure shape;
-	shape.isQuadratic = true;
+	shape.type = QUADRATIC;
 	shape.relativeLocationsOffset = indexStart;
 	int sum = 0;
 	cgp::vec3 centerOfMass = cgp::vec3(0.0, 0.0, 0.0);
@@ -319,7 +317,7 @@ void scene_structure::addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::v
 				float y_p = y;
 				float z_p = z;
 				particle_element particle;
-				particle.phase = indexShapeToPhase(indexShape, shape.isShapeMatching);
+				particle.phase = indexShape;
 				particle.position = vec3(x_p, y_p, z_p) + globalPosition; // a zero value in z position will lead to a 2D simulation
 				centerOfMass += particle.position;
 				sum++;
@@ -417,6 +415,7 @@ void scene_structure::addSphere(float c, cgp::vec3 globalPosition, cgp::vec3 ang
 
 
 	shape_structure shape;
+	shape.type = RIGID;
 
 	shape.relativeLocationsOffset = indexStart;
 
@@ -434,7 +433,7 @@ void scene_structure::addSphere(float c, cgp::vec3 globalPosition, cgp::vec3 ang
 
 				if (std::sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2)) < 1.25 * h) {
 					particle_element particle;
-					particle.phase = indexShapeToPhase(indexShape, shape.isShapeMatching);
+					particle.phase = indexShape;
 					particle.position = vec3(x_p, y_p, z_p) + globalPosition; // a zero value in z position will lead to a 2D simulation
 					centerOfMass += particle.position;
 					sum++;
@@ -493,6 +492,7 @@ void scene_structure::addPyramid(float c, cgp::vec3 globalPosition, cgp::vec3 an
 	int indexShape = all_shapes.size();
 	int indexStart = all_particles.size();
 	shape_structure shape;
+	shape.type = RIGID;
 	shape.relativeLocationsOffset = indexStart;
 
 	int sum = 0;
@@ -507,7 +507,7 @@ void scene_structure::addPyramid(float c, cgp::vec3 globalPosition, cgp::vec3 an
 				float y_p = y;
 				float z_p = z;
 				particle_element particle;
-				particle.phase = indexShapeToPhase(indexShape, shape.isShapeMatching);
+				particle.phase = indexShape;
 				particle.position = vec3(x_p, y_p, z_p) + globalPosition; // a zero value in z position will lead to a 2D simulation
 				centerOfMass += particle.position;
 				sum++;
@@ -566,16 +566,16 @@ void scene_structure::addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 angl
 	int indexStart = all_particles.size();
 	shape_structure shape;
 	shape.relativeLocationsOffset = indexStart;
-	shape.isShapeMatching = false;
+	shape.type = CLOTH;
 	int sum = 0;
 	cgp::vec3 centerOfMass = cgp::vec3(0.0, 0.0, 0.0);
 
-	float step = (3 * 0.01f);
+	float step = (3 * 0.006f);
 
 	//this part is hard coded can be optimised with further parameters in cloth TODO
 
 
-	for (float z = 0; z <= h * 8; z = z + step)
+	for (float z = -h * 3; z <= h * 3; z = z + step)
 	{
 		for (float y = -h * 3; y <= h * 3; y = y + step)
 		{
@@ -583,7 +583,7 @@ void scene_structure::addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 angl
 			float y_p = y;
 			float z_p = z;
 			particle_element particle;
-			particle.phase = indexShapeToPhase(indexShape, shape.isShapeMatching);
+			particle.phase = indexShape;
 			particle.position = vec3(0.0, y_p, z_p) + globalPosition; // a zero value in z position will lead to a 2D simulation
 			centerOfMass += particle.position;
 			sum++;
@@ -593,7 +593,7 @@ void scene_structure::addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 angl
 		}
 	}
 
-	for (float z = 0; z <= h * 8; z = z + step)
+	for (float z = -h * 3; z <= h * 3; z = z + step)
 	{
 		shape.height++;
 	}
@@ -624,22 +624,35 @@ void scene_structure::addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 angl
 	////inserting fixed points
 
 
+	for (int i = 0; i < shape.width; i++) {
+		if (i % 2 == 0 || i == shape.width - 1) {
+			int index1 = shape.getGlobalIndex(shape.height - 1, i);
+			int index2 = shape.getGlobalIndex(0, i);
 
-	int i = shape.getGlobalIndex(shape.height - 1, 0);
-	int j = shape.getGlobalIndex(shape.height - 1, shape.width - 1);
+			const particle_element& p1 = all_particles[index1];
+			const particle_element& p2 = all_particles[index2];
 
+			constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index1, p1.position));
+			constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index2, p2.position));
+		}
+	}
+	for (int i = 0; i < shape.height; i++) {
+		if (i % 2 == 0 || i == shape.height - 1) {
+			int index1 = shape.getGlobalIndex(i, shape.width - 1);
+			int index2 = shape.getGlobalIndex(i, 0);
 
-	const particle_element& p1 = all_particles[i];
-	const particle_element& p2 = all_particles[j];
+			const particle_element& p1 = all_particles[index1];
+			const particle_element& p2 = all_particles[index2];
 
+			constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index1, p1.position));
+			constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index2, p2.position));
+		}
+	}
+	
 
-	constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(i, p1.position));
-	constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(j, p2.position));
-
-
-	//initializing lengths of springs
-	j = shape.width / 2;
-	i = shape.height / 2;
+	//initializing lengths of springs 
+	int j = shape.width / 2;
+	int i = shape.height / 2;
 	int globalI = shape.getGlobalIndex(i, j);
 
 	shape.structLength0 = norm(all_particles[globalI].position - all_particles[shape.getNeighbour(globalI, 0, 1)].position);

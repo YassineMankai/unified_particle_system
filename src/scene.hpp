@@ -6,7 +6,6 @@
 #include "shape/custom_shape.hpp"
 #include "simulation/simulation.hpp"
 #include "uniform_grid/Rgrid.hpp"
-#include "helpers_scene.hpp"
 
 // The element of the GUI that are not already stored in other structures
 struct gui_parameters {

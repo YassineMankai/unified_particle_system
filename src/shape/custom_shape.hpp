@@ -10,9 +10,11 @@ struct particle_element
     cgp::vec3 position; // Position
     cgp::vec3 velocity; // Speed
     cgp::vec3 force; // Force
-    bool flagConstraint = false;
-    cgp::vec3 dv; // Velocity adjustment due to contact collision
-    float mass = 0.0001;
+    int nbConstraint = 0;
+    int nbConstraintTest = 0;
+    cgp::vec3 dx = cgp::vec3(0,0,0); 
+    cgp::vec3 dx_friction_and_restitution = cgp::vec3(0,0,0); 
+    float mass = 1;
     int phase;
 
     particle_element() : position{ 0,0,0 }, velocity{ 0,0,0 }, force{ 0,0,0 } {}

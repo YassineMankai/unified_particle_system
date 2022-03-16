@@ -307,7 +307,7 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			vec3& x = particle.position;
 			vec3 dx = vec3(0.0, 0.0, 0.0);
 
-			float k = 0.8; //stiffness parameter TODO put it in the parameters of simulation
+			float k = 1.2; //stiffness parameter TODO put it in the parameters of simulation
 			int index1, index2, index3, index4;
 			float L;
 			//int numberOfConstraints = shape.width*shape.height*3; //204
@@ -422,58 +422,67 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 	}
 }
 
-
-
 // Constraints related to the environment (walls, obstacles && fixed points)
-void simulation_apply_env_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint)
+void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float dt)
 {
-	int const N = all_particles.size();
+	cgp::vec3 maxBox(-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity());
+	cgp::vec3 minBox(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity());
+	for (int i = 0; i < all_particles.size(); i++) {
+		const particle_element& particle = all_particles[i];
+		maxBox.x = std::max(maxBox.x, particle.position.x);
+		minBox.x = std::min(minBox.x, particle.position.x);
+		maxBox.y = std::max(maxBox.y, particle.position.y);
+		minBox.y = std::min(minBox.y, particle.position.y);
+		maxBox.z = std::max(maxBox.z, particle.position.z);
+		minBox.z = std::min(minBox.z, particle.position.z);
+	}
+	Rgrid regularGrid;
+	regularGrid.initialize(minBox, maxBox, 20); // TODO: adapt grid size to context
 
+	for (int i = 0; i < all_particles.size(); i++) {
+		const particle_element& particle = all_particles[i];
+		regularGrid.insert(particle.position, i);
+	}
+	
+	// env contacts
+	int const N = all_particles.size();
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		vec3& v = all_particles[pIndex].velocity;
 		vec3& p = all_particles[pIndex].position;
+		vec3& dx = all_particles[pIndex].dx;
 		for (const auto& wall : constraint.walls) {
 
 			if (dot(p - wall.point, wall.normal) < 0.01) {
 				vec3 dp = (-dot(p - wall.point, wall.normal) + 0.01) * wall.normal;
-				p += dp;
-				prevX[pIndex] += dp;
-				all_particles[pIndex].flagConstraint = true;
+				dx += dp;
+				all_particles[pIndex].nbConstraint += 1;
 				vec3 vn = dot(v, wall.normal) * wall.normal;
 				vec3 vpar = v - vn;
-				//all_particles[pIndex].dv = (0.5* vpar - 0.7*vn) - v; //cube
-				all_particles[pIndex].dv = (0.5 * vpar - 0.8 * vn) - v; //sphere
+				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4* vpar - v) * dt; //cube
+				all_particles[pIndex].nbConstraintTest += 1;
 			}
 		}
 		for (const auto& sphere : constraint.spheres) {
 
 			if (norm(sphere.center - p) < sphere.radius + 0.01) {
 				vec3 dir = (p - sphere.center) / norm(p - sphere.center);
-				p = sphere.center + (sphere.radius + 0.01) * dir;
-				all_particles[pIndex].flagConstraint = true;
-				vec3 vpar = dot(v, dir) * dir;
-				vec3 vn = v - vpar;
-				all_particles[pIndex].dv = (vn)-v;
+				dx += sphere.center + (sphere.radius + 0.01) * dir - p;
+				all_particles[pIndex].nbConstraint += 1;
+				vec3 vn = dot(v, dir) * dir;
+				vec3 vpar = v - vn;
+				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; //cube
+				all_particles[pIndex].nbConstraintTest += 1;
 			}
 		}
 	}
 
-	//fixed points of the scene:
-	for (auto const& it : constraint.fixed_sample) {
-		int pIndex = it.first;
-		particle_element& particle = all_particles[pIndex];
-		particle.position = it.second;
-	}
-}
 
-// Particle/Particle contact constraint
-void simulation_apply_particle_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX, Rgrid const& grid, float dt)
-{
+	// particle contact
 	for (int p1 = 0; p1 < all_particles.size(); p1++)
 	{
 		particle_element& particle1 = all_particles[p1];
 		float const epsilon = 1e-5f;
-		cgp::buffer<int> neighborhood = grid.getNeighborhood(particle1.position);
+		cgp::buffer<int> neighborhood = regularGrid.getNeighborhood(particle1.position);
 		for (int i = 0; i < neighborhood.size(); i++)
 		{
 			int p2 = neighborhood[i];
@@ -484,27 +493,45 @@ void simulation_apply_particle_contact_constraints(cgp::buffer<particle_element>
 			if (detection <= 0.01f * 2) { //TODO: use correct sphere radius
 				vec3 u = (particle1.position - particle2.position) / detection;
 				float diff = 0.01f * 2 - detection;
-				vec3 dx = 1.5f * (epsilon + diff / 2.0) * u;
-				particle1.position = particle1.position + dx;
-				prevX[i] += dx;
-				particle2.position = particle2.position - dx;
-				prevX[p2] -= dx;
-				float projected_relative_speed = 2 * dot(dx, u) / dt;
-				particle1.flagConstraint = true;
-				particle2.flagConstraint = true;
-				if (std::abs(projected_relative_speed) > 0.001) {
-					particle1.dv += projected_relative_speed * u;
-					particle2.dv += -projected_relative_speed * u;
+				vec3 dx = (epsilon + diff / 2.0) * u;
+				particle1.dx += dx;
+				particle2.dx += - dx;
+
+				particle1.nbConstraint += 1;
+				particle2.nbConstraint += 1;
+				particle1.nbConstraintTest += 1;
+				particle2.nbConstraintTest += 1;
+
+				if (norm(dx) > 0.01 * dt) {
+					float projected_correction = 1.8 * dot(dx, u);
+					particle1.dx_friction_and_restitution += projected_correction * u;
+					particle2.dx_friction_and_restitution += -projected_correction * u;
 				}
 				else
 				{
-					particle1.dv += -particle1.velocity / 3.f;
-					particle2.dv += -particle2.velocity / 3.f;
+					particle1.dx_friction_and_restitution += -particle1.velocity * dt / 3.f;
+					particle2.dx_friction_and_restitution += -particle2.velocity * dt / 3.f;
 				}
-
 			}
 		}
 	}
+
+	// Apply dx
+	for (int i = 0; i < all_particles.size(); i++) {
+		particle_element& particle = all_particles[i];
+		if (particle.nbConstraint > 0) {
+			particle.position += particle.dx / particle.nbConstraint;
+			prevX[i] += particle.dx / particle.nbConstraint;
+			if (particle.nbConstraintTest > 0) {
+				prevX[i] -= particle.dx_friction_and_restitution / particle.nbConstraintTest;
+				particle.nbConstraintTest = 0;
+				particle.dx_friction_and_restitution = vec3(0,0,0);
+			}
+			particle.nbConstraint = 0;
+			particle.dx = vec3(0, 0, 0);
+		}
+	}
+
 }
 
 
@@ -541,13 +568,7 @@ void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cg
 	for (int index = 0; index < all_particles.size(); index++) {
 		particle_element& particle = all_particles[index];
 		particle.velocity = (particle.position - prevX[index]) / dt;
-		if (particle.flagConstraint) {
-			particle.flagConstraint = false;
-			particle.velocity += particle.dv;
-			particle.dv = vec3(0, 0, 0);
-		}
-
-
+		
 		//can consider freezing time per shape, it depends on the simulation
 		if (norm(particle.position - prevX[index]) < 0.0001) {
 			particle.position = prevX[index];

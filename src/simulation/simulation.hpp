@@ -16,9 +16,11 @@ struct simulation_parameters
 {
     float dt = 0.016f;        // time step for the numerical integration
     float sphere_radius = 0.01f;        // damping parameter
-    float alpha = 0.913;
-    float beta = 1.0;
-
+    float alpha = 0.7;
+    float beta = 0.5;
+    int N_step = 8; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+    int N_stabilization = 5; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+    int N_solver = 3; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
     cgp::vec3 sphere3Pos = cgp::vec3(-0.7f, 1.25f, 0.4f);
 };
 
@@ -34,9 +36,7 @@ void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<sha
 
 void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, constraint_structure const& constraint);
 
-void simulation_apply_env_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint);
-
-void simulation_apply_particle_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX,  Rgrid const& grid, float dt);
+void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint, float dt);
 
 void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
 

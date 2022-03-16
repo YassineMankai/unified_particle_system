@@ -6,7 +6,8 @@
 #include "shape/custom_shape.hpp"
 #include "simulation/simulation.hpp"
 #include "uniform_grid/Rgrid.hpp"
-#include "helpers_scene.hpp"
+
+
 
 // The element of the GUI that are not already stored in other structures
 struct gui_parameters {
@@ -48,7 +49,7 @@ struct scene_structure {
 	cgp::mesh_drawable sphere_particle; // Sphere used to display a particle
 	cgp::buffer<particle_element> all_particles = {};
 	cgp::buffer<shape_structure> all_shapes = {};
-	Rgrid regularGrid;
+	
 	/*
 	cgp::grid_2D<cgp::vec3> field;      // grid used to represent the volume of the fluid under the particles
 	cgp::mesh_drawable field_quad; // quad used to display this field color
@@ -70,11 +71,11 @@ struct scene_structure {
 	void simulate();  // 
 	void display(double elapsedTime);     // The frame display to be called within the animation loop
 	void display_gui(); // The display of the GUI, also called within the animation loop
-	void addCube(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
-	void addCubeQuadratic(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	void addCube(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	void addCubeQuadratic(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	void addSphere(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	void addPyramid(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
-	void addCloth(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	void addCloth(float c_w, float c_h, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 };
 
 

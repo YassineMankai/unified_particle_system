@@ -4,7 +4,29 @@ using namespace cgp;
 
 
 
+mat9 calculateInverseWithEigen(mat9 A) {
+	Eigen::MatrixXd B = Eigen::MatrixXd::Zero(9, 9);
 
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 9; j++) {
+			B(i, j) = A(i, j);
+		}
+	}
+
+	B = B.inverse();
+
+	mat9 K = cgp::mat9();
+
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 9; j++) {
+			K(i, j) = B(i, j);
+		}
+	}
+
+	return K;
+
+
+}
 
 
 

@@ -7,6 +7,8 @@
 #include "simulation/simulation.hpp"
 #include "uniform_grid/Rgrid.hpp"
 
+
+
 // The element of the GUI that are not already stored in other structures
 struct gui_parameters {
 	bool display_frame     = false;

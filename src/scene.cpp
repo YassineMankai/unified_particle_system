@@ -7,10 +7,10 @@ void scene_structure::setShapes() {
 	all_particles.clear();
 	all_shapes.clear();
 
-	addPyramid(1.0f, cgp::vec3(-0.6f, 0.1f, 0.6f), cgp::vec3(0, 0, 0));
-	addCube(2.8f, 2.8f, 0.5f, cgp::vec3(-0.6f, 0.1f, 0.20f), cgp::vec3(0, 0, 0));
-	//addCloth(3.2f, 3.2f, cgp::vec3(-0.65f, 0.1f, 0.4f), cgp::vec3(0, Pi / 2 + Pi/ 8, 0));
-	//addCloth(0.3f, cgp::vec3(0.9f, 0.5f, 0.25f), cgp::vec3(0, -90, 0));
+	//addPyramid(1.0f, cgp::vec3(-0.6f, 0.1f,1.6f), cgp::vec3(0, 0, 0));
+	//addCube(2.8f, 2.8f, 0.5f, cgp::vec3(-0.6f, 0.1f, 0.20f), cgp::vec3(0, 0, 0));
+	addCloth(3.2f, 3.2f, cgp::vec3(-0.65f, 0.1f, 0.4f), cgp::vec3(0, Pi / 2 + Pi/ 8, 0));
+	addCubeQuadratic(0.8f, 0.8f,0.8f, cgp::vec3(-0.65f, 0.1f, 1.20f), cgp::vec3(0, 0, 0));
 }
 
 void scene_structure::initialize()
@@ -363,6 +363,8 @@ void scene_structure::addCubeQuadratic(float c_x, float c_y, float c_z, cgp::vec
 
 		shape.AqqQuad += particle.mass * p * q;
 	} 
+
+	shape.AqqQuad = calculateInverseWithEigen(shape.AqqQuad);
 	
 	rotation_transform rotationy = rotation_transform::from_axis_angle(vec3(0.0, 1.0, 0.0), anglesEuler.y);
 	rotation_transform rotationx = rotation_transform::from_axis_angle(vec3(1.0, 0.0, 0.0), anglesEuler.x);

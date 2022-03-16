@@ -24,6 +24,8 @@ struct simulation_parameters
     cgp::vec3 sphere3Pos = cgp::vec3(-0.7f, 1.25f, 0.4f);
 };
 
+mat9 calculateInverseWithEigen(mat9 A);
+
 // Fill the forces in the cloth given the position and velocity
 void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, simulation_parameters const& parameters);
 

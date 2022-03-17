@@ -4,27 +4,17 @@
 using namespace cgp;
 
 void scene_structure::setShapes(DemoScene demoType) {
-	parameters.forceField.clear();
-	parameters.forceField.resize(500, 500);
-	for (int i = 0; i < parameters.forceField.dimension(0); i++){
-		for (int j = 0; j < parameters.forceField.dimension(1); j++) {
-			float vx = (rand_interval() > 0.5 ? -1 : 1) * rand_interval(20, 30);
-			float vy = (rand_interval() > 0.5 ? -1 : 1) * rand_interval(20, 30);
-			float vz = rand_interval(4, 6);
-			parameters.forceField(i, j) = vec3(vx, vy, vz);
-		}
-	}
 	all_particles.clear();
 	all_shapes.clear();
 	constraint.fixed_sample.clear();
 
 	switch (demoType) {
 	case sc_LINEAR:
-		parameters.dt = 0.020f;
+		parameters.dt = 0.018f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 12; 
-		parameters.N_stabilization = 2;
+		parameters.N_step = 10;
+		parameters.N_stabilization = 4;
 		parameters.N_solver = 2;
 		constraint.spheres = { {{-0.22f, 0.0f, 0.15f}, 0.15f},
 								{ {0.22f, 0.0f, 0.15f}, 0.15f},
@@ -34,11 +24,11 @@ void scene_structure::setShapes(DemoScene demoType) {
 		addCube(1.2f, 1.2f, 1.2f, cgp::vec3(0.0f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, Pi / 4));
 		break;
 	case sc_QUADRATIC:
-		parameters.dt = 0.020f;
+		parameters.dt = 0.018f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 12;
-		parameters.N_stabilization = 2;
+		parameters.N_step = 10;
+		parameters.N_stabilization = 4;
 		parameters.N_solver = 2;
 		constraint.spheres = { {{-0.22f, 0.0f, 0.15f}, 0.15f},
 								{ {0.22f, 0.0f, 0.15f}, 0.15f},
@@ -77,7 +67,7 @@ void scene_structure::setShapes(DemoScene demoType) {
 								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
 		};
 		addCube(0.8f, 0.8f, 0.8f, cgp::vec3(-0.25f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, 0));
-		addCloth(3.0f, 3.0f, 3, cgp::vec3(-0.2f, 0.0f, 0.5f), cgp::vec3(0, Pi/2 + Pi/8, 0), 2);
+		addCloth(3.0f, 3.0f, 3, cgp::vec3(-0.2f, 0.0f, 0.5f), cgp::vec3(0, Pi / 2 + Pi / 8, 0), 2);
 		break;
 	}
 	parameters.sphere3Pos = constraint.spheres[2].center;
@@ -206,28 +196,20 @@ void scene_structure::display(double elapsedTime)
 	simulate();
 
 	// Display particles
-	if (gui.display_particles) {
-		for (int k = 0; k < all_particles.size(); ++k) {
-			vec3 const& p = all_particles[k].position;
-			sphere_particle.transform.translation = p;
-			draw(sphere_particle, environment);
-		}
+	for (int k = 0; k < all_particles.size(); ++k) {
+		vec3 const& p = all_particles[k].position;
+		sphere_particle.transform.translation = p;
+		draw(sphere_particle, environment);
 	}
 
-	/*if (gui.display_color) {
-		update_field_color(field, particles);
-		opengl_update_texture_image(field_quad.texture, field);
-		draw(field_quad, environment);
-	}*/
 }
 
 void scene_structure::display_gui()
 {
-	
+
 	ImGui::Text("Display");
 	ImGui::Checkbox("Frame", &gui.display_frame);
 	ImGui::Checkbox("Wireframe", &gui.display_wireframe);
-	ImGui::Checkbox("Particles", &gui.display_particles);
 
 	ImGui::Spacing(); ImGui::Spacing();
 
@@ -246,23 +228,23 @@ void scene_structure::display_gui()
 
 	ImGui::Spacing(); ImGui::Spacing();
 
-	ImGui::SliderFloat("SphereX", &parameters.sphere3Pos.x, -1.8, 1.8, "%.3f", 2.0f);
-	ImGui::SliderFloat("SphereY", &parameters.sphere3Pos.y, -1.8, 1.8, "%.3f", 2.0f);
-	ImGui::SliderFloat("SphereZ", &parameters.sphere3Pos.z, -0.2, 1.8, "%.3f", 2.0f);
+	ImGui::SliderFloat("SphereX", &parameters.sphere3Pos.x, -1.8, 1.8, "%.05f", 1.0f);
+	ImGui::SliderFloat("SphereY", &parameters.sphere3Pos.y, -1.8, 1.8, "%.05f", 1.0f);
+	ImGui::SliderFloat("SphereZ", &parameters.sphere3Pos.z, -0.2, 1.8, "%.05f", 1.0f);
 
 	ImGui::Spacing(); ImGui::Spacing();
 
 	ImGui::Spacing(); ImGui::Spacing();
-	
-	
-	
+
+
+
 	bool resetWithLinear = false;
 	resetWithLinear |= ImGui::Button("Reset with Linear");
 	if (resetWithLinear) {
 		setShapes(sc_LINEAR);
 		simulation_running = false;
 	}
-	
+
 	bool resetWithQuadratic = false;
 	resetWithQuadratic |= ImGui::Button("Reset with Quadratic");
 	if (resetWithQuadratic) {
@@ -278,12 +260,12 @@ void scene_structure::display_gui()
 	}
 
 	bool resetWithTrampoline = false;
-	resetWithTrampoline |= ImGui::Button("Reset with TRAMPOLINE");
+	resetWithTrampoline |= ImGui::Button("Reset with Trampoline");
 	if (resetWithTrampoline) {
 		setShapes(sc_TRAMPOLINE);
 		simulation_running = false;
 	}
-	
+
 	if (ImGui::Button("Start/Stop"))
 		simulation_running = !simulation_running;
 }

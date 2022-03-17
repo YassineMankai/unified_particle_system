@@ -8,16 +8,13 @@
 #include "uniform_grid/Rgrid.hpp"
 
 
-enum DemoScene {sc_CURTAIN, sc_LINEAR, sc_QUADRATIC, sc_TRAMPOLINE};
+
 
 
 // The element of the GUI that are not already stored in other structures
 struct gui_parameters {
 	bool display_frame     = false;
 	bool display_wireframe = false;
-	bool display_particles = true;
-	bool display_color = true;
-	int N_sample_edge    = 20;  // number of samples of the cloth (the total number of vertices is N_sample_edge^2)
 };
 
 
@@ -28,6 +25,7 @@ struct scene_structure {
 	// ****************************** //
 	// Elements and shapes of the scene
 	// ****************************** //
+	enum DemoScene { sc_CURTAIN, sc_LINEAR, sc_QUADRATIC, sc_TRAMPOLINE };
 
 	cgp::mesh_drawable global_frame;          // The standard global frame
 	cgp::scene_environment_basic environment; // Standard environment controler
@@ -51,11 +49,6 @@ struct scene_structure {
 	cgp::mesh_drawable sphere_particle; // Sphere used to display a particle
 	cgp::buffer<particle_element> all_particles = {};
 	cgp::buffer<shape_structure> all_shapes = {};
-	
-	/*
-	cgp::grid_2D<cgp::vec3> field;      // grid used to represent the volume of the fluid under the particles
-	cgp::mesh_drawable field_quad; // quad used to display this field color
-	*/
 
 	// Helper variables
 	bool simulation_running = false;   // Boolean indicating if the simulation should be computed

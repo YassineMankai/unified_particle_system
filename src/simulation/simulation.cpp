@@ -507,13 +507,8 @@ void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp:
 	size_t const N = all_particles.size();
 	// Gravity
 	const vec3 g = { 0,0,-9.8f };
-	int h = parameters.forceField.dimension(0);
-	int w = parameters.forceField.dimension(1);
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		all_particles[pIndex].force = all_particles[pIndex].mass * g;
-		vec2 pos2DNormalized = (all_particles[pIndex].position.xy() - vec2(-1.6, -1.6)) / 3.4; // TODO : use a more generic formula
-		int2 cell = int2(pos2DNormalized.x * (h-1), pos2DNormalized.y * (w-1));
-		all_particles[pIndex].force += parameters.forceField[cell];
 	}
 }
 void simulation_numerical_integration(cgp::buffer<particle_element>& all_particles, float dt)

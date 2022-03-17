@@ -22,7 +22,6 @@ struct simulation_parameters
     int N_stabilization = 2; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
     int N_solver = 2; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
     cgp::vec3 sphere3Pos = cgp::vec3(0.0f, -0.22f, 0.15f);
-    cgp::grid_2D<vec3> forceField = {};
     float clothStiffness = 0.8f;
 };
 

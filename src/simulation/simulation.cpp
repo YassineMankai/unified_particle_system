@@ -252,7 +252,7 @@ void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<sha
 		}
 	}
 }
-void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, constraint_structure const& constraint) {
+void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, constraint_structure const& constraint, simulation_parameters const& parameters) {
 	for (int pIndex = 0; pIndex < all_particles.size(); pIndex++) {
 		particle_element& particle = all_particles[pIndex];
 		shape_structure& shape = all_shapes[particle.phase];
@@ -260,7 +260,7 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			vec3& x = particle.position;
 			vec3 dx = vec3(0.0, 0.0, 0.0);
 
-			float k = 1.2; //stiffness parameter TODO put it in the parameters of simulation
+			float k = parameters.clothStiffness; //stiffness parameter TODO put it in the parameters of simulation
 			int index1, index2, index3, index4;
 			float L;
 			//int numberOfConstraints = shape.width*shape.height*3; //204
@@ -450,9 +450,9 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				particle2.nbConstraint += 1;
 				particle1.nbConstraintTest += 1;
 				particle2.nbConstraintTest += 1;
-
-				if (norm(dx) > 0.01 * dt) {
-					float projected_correction = 1.8 * dot(dx, u);
+				
+				if (norm(dx) > 0.005 * dt) {
+					float projected_correction = 2.6 * dot(dx, u);
 					particle1.dx_friction_and_restitution += projected_correction * u;
 					particle2.dx_friction_and_restitution += -projected_correction * u;
 				}
@@ -461,6 +461,23 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 					particle1.dx_friction_and_restitution += -particle1.velocity * dt / 3.f;
 					particle2.dx_friction_and_restitution += -particle2.velocity * dt / 3.f;
 				}
+				
+
+				//friction
+				/*vec3 dx_fr = (particle1.position - prevX[p1]) - (particle2.position - prevX[p2]);
+				u = normalize(particle1.position - particle2.position);
+				vec3 dx_fr_normal = dot(dx_fr, u) * u;
+				vec3 dx_fr_tangential = dx_fr - dx_fr_normal;
+				vec3 dx_fr_f;
+				if (norm(dx_fr_normal) < 0.57 * 0.01) {
+					dx_fr_f = 0.5f * dx_fr_normal;
+				}
+				else
+				{
+					dx_fr_f = 0.5f * dx_fr_normal * std::min(1.0f, 0.4f * 0.02f / norm(dx_fr_normal));
+				}
+				particle1.dx += dx_fr_f;
+				particle2.dx -= 0.5f * dx_fr_f;*/
 			}
 		}
 	}

@@ -9,19 +9,20 @@
 #define EIGEN_INITIALIZE_MATRICES_BY_ZERO
 #include "../third_party/eigen/Eigen/EigenValues"
 #include "../third_party/eigen/Eigen/Eigen"
-
+#include "custom_special_types.hpp"
 
 
 struct simulation_parameters
 {
-    float dt = 0.016f;        // time step for the numerical integration
+    float dt = 0.014f;        // time step for the numerical integration
     float sphere_radius = 0.01f;        // damping parameter
     float alpha = 0.7;
     float beta = 0.5;
-    int N_step = 8; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-    int N_stabilization = 5; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-    int N_solver = 3; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
-    cgp::vec3 sphere3Pos = cgp::vec3(-0.7f, 1.25f, 0.4f);
+    int N_step = 12; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+    int N_stabilization = 2; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+    int N_solver = 2; // Adapt here the number of intermediate simulation steps (ex. 5 intermediate steps per frame)
+    cgp::vec3 sphere3Pos = cgp::vec3(0.0f, -0.22f, 0.15f);
+    float clothStiffness = 0.8f;
 };
 
 mat9 calculateInverseWithEigen(mat9 A);
@@ -36,7 +37,7 @@ void simulation_numerical_integration(cgp::buffer<particle_element>& all_particl
 // Apply the constraints (fixed position, obstacles, shape matching, cloth constraints, fluid constraints, ...) 
 void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, float alpha, float beta);
 
-void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, constraint_structure const& constraint);
+void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, constraint_structure const& constraint, simulation_parameters const& parameters);
 
 void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, const cgp::buffer<shape_structure>& all_shapes, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint, float dt);
 

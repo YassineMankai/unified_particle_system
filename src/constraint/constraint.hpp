@@ -27,9 +27,10 @@ struct constraint_structure
 											{ {-cubeSize, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
 											{ {0.0f, cubeSize, 0.0f}, {0.0f, -1.0f, 0.0f}},
 											{ {0.0f, -cubeSize, 0.0f}, {0.0f, 1.0f, 0.0f}} };// Height of the flood
-	cgp::buffer<sphere_parameter> spheres = { {{1.1f, 0.5f, 0.2f}, 0.15f},
-											{ {-0.07f, 0.5f, 0.2f}, 0.15f},
-											{ {-0.7f, 1.25f, 0.4f}, 0.15f},
+	cgp::buffer<sphere_parameter> spheres = {   {{-0.22f, 0.0f, 0.15f}, 0.15f},
+												{ {0.22f, 0.0f, 0.15f}, 0.15f},
+												{ {0.0f, -0.22f, 0.15f}, 0.15f},
+												{ {0.0f, 0.22f, 0.15f}, 0.15f},
 	}; // Colliding sphere
 	
 	std::map<int, cgp::vec3> fixed_sample; // Storage of all fixed position of the cloth

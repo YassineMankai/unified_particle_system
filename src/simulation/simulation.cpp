@@ -461,23 +461,6 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 					particle1.dx_friction_and_restitution += -particle1.velocity * dt / 3.f;
 					particle2.dx_friction_and_restitution += -particle2.velocity * dt / 3.f;
 				}
-				
-
-				//friction
-				/*vec3 dx_fr = (particle1.position - prevX[p1]) - (particle2.position - prevX[p2]);
-				u = normalize(particle1.position - particle2.position);
-				vec3 dx_fr_normal = dot(dx_fr, u) * u;
-				vec3 dx_fr_tangential = dx_fr - dx_fr_normal;
-				vec3 dx_fr_f;
-				if (norm(dx_fr_normal) < 0.57 * 0.01) {
-					dx_fr_f = 0.5f * dx_fr_normal;
-				}
-				else
-				{
-					dx_fr_f = 0.5f * dx_fr_normal * std::min(1.0f, 0.4f * 0.02f / norm(dx_fr_normal));
-				}
-				particle1.dx += dx_fr_f;
-				particle2.dx -= 0.5f * dx_fr_f;*/
 			}
 		}
 	}

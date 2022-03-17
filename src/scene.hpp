@@ -8,6 +8,8 @@
 #include "uniform_grid/Rgrid.hpp"
 
 
+enum DemoScene {sc_CURTAIN, sc_LINEAR, sc_QUADRATIC, sc_TRAMPOLINE};
+
 
 // The element of the GUI that are not already stored in other structures
 struct gui_parameters {
@@ -56,7 +58,7 @@ struct scene_structure {
 	*/
 
 	// Helper variables
-	bool simulation_running = true;   // Boolean indicating if the simulation should be computed
+	bool simulation_running = false;   // Boolean indicating if the simulation should be computed
 	GLuint cloth_texture;             // Storage of the texture ID used for the cloth
 
 
@@ -67,15 +69,23 @@ struct scene_structure {
 	// ****************************** //
 
 	void initialize();  // Standard initialization to be called before the animation loop
-	void setShapes();  // Creates the shapes used in the simulation
+	void setShapes(DemoScene demoType = sc_LINEAR);  // Creates the shapes used in the simulation
 	void simulate();  // 
 	void display(double elapsedTime);     // The frame display to be called within the animation loop
 	void display_gui(); // The display of the GUI, also called within the animation loop
+	
 	void addCube(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	
 	void addCubeQuadratic(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	
 	void addSphere(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	
 	void addPyramid(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
-	void addCloth(float c_w, float c_h, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	
+	// type 0 = curtain two fixed points
+	// type 1 = curtain fixed upper line
+	// type 2 = trampoline	
+	void addCloth(float c_w, float c_h, int spacing, cgp::vec3 globalPosition, cgp::vec3 anglesEuler, int type);
 };
 
 

@@ -3,15 +3,84 @@
 
 using namespace cgp;
 
-void scene_structure::setShapes() {
+void scene_structure::setShapes(DemoScene demoType) {
+	parameters.forceField.clear();
+	parameters.forceField.resize(500, 500);
+	for (int i = 0; i < parameters.forceField.dimension(0); i++){
+		for (int j = 0; j < parameters.forceField.dimension(1); j++) {
+			float vx = (rand_interval() > 0.5 ? -1 : 1) * rand_interval(20, 30);
+			float vy = (rand_interval() > 0.5 ? -1 : 1) * rand_interval(20, 30);
+			float vz = rand_interval(4, 6);
+			parameters.forceField(i, j) = vec3(vx, vy, vz);
+		}
+	}
 	all_particles.clear();
 	all_shapes.clear();
+	constraint.fixed_sample.clear();
 
-	//addPyramid(1.0f, cgp::vec3(-0.6f, 0.1f,1.6f), cgp::vec3(0, 0, 0));
-	//addCube(2.8f, 2.8f, 0.5f, cgp::vec3(-0.6f, 0.1f, 0.20f), cgp::vec3(0, 0, 0));
-	addCloth(3.2f, 2.2f, cgp::vec3(-0.65f, 0.1f, 0.4f), cgp::vec3(0, Pi / 2 + Pi/ 8, 0));
-	addCloth(3.2f, 2.2f, cgp::vec3(-0.35f, 0.1f, 0.4f), cgp::vec3(0, Pi / 2 - Pi/ 8, 0));
-	addCubeQuadratic(0.8f, 0.8f,0.8f, cgp::vec3(-0.65f, 0.1f, 1.20f), cgp::vec3(0, 0, 0));
+	switch (demoType) {
+	case sc_LINEAR:
+		parameters.dt = 0.020f;
+		parameters.alpha = 0.8f;
+		parameters.beta = 0.5f;
+		parameters.N_step = 12; 
+		parameters.N_stabilization = 2;
+		parameters.N_solver = 2;
+		constraint.spheres = { {{-0.22f, 0.0f, 0.15f}, 0.15f},
+								{ {0.22f, 0.0f, 0.15f}, 0.15f},
+								{ {0.0f, -0.22f, 0.15f}, 0.15f},
+								{ {0.0f, 0.22f, 0.15f}, 0.15f},
+		};
+		addCube(1.2f, 1.2f, 1.2f, cgp::vec3(0.0f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, Pi / 4));
+		break;
+	case sc_QUADRATIC:
+		parameters.dt = 0.020f;
+		parameters.alpha = 0.8f;
+		parameters.beta = 0.5f;
+		parameters.N_step = 12;
+		parameters.N_stabilization = 2;
+		parameters.N_solver = 2;
+		constraint.spheres = { {{-0.22f, 0.0f, 0.15f}, 0.15f},
+								{ {0.22f, 0.0f, 0.15f}, 0.15f},
+								{ {0.0f, -0.22f, 0.15f}, 0.15f},
+								{ {0.0f, 0.22f, 0.15f}, 0.15f},
+		};
+		addCubeQuadratic(1.2f, 1.2f, 1.2f, cgp::vec3(0.0f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, Pi / 4));
+		break;
+	case sc_CURTAIN:
+		parameters.dt = 0.020f;
+		parameters.alpha = 0.3f;
+		parameters.beta = 0.15f;
+		parameters.N_step = 12;
+		parameters.N_stabilization = 2;
+		parameters.N_solver = 2;
+		parameters.clothStiffness = 0.9f;
+		constraint.spheres = { {{-1.5f, -0.75f, 0.15f}, 0.15f},
+								{ {-1.5f, -0.25f, 0.15f}, 0.15f},
+								{ {0.2f, 0.0f, 0.3f}, 0.15f},
+								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
+		};
+		addCube(1.0f, 1.0f, 1.0f, cgp::vec3(0.15f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, 0));
+		addCloth(3.0f, 4.0f, 4, cgp::vec3(-0.1f, 0.0f, 0.5f), cgp::vec3(0, 0, 0), 1);
+		break;
+	case sc_TRAMPOLINE:
+		parameters.dt = 0.014f;
+		parameters.alpha = 0.8f;
+		parameters.beta = 0.5f;
+		parameters.N_step = 12;
+		parameters.N_stabilization = 2;
+		parameters.N_solver = 2;
+		parameters.clothStiffness = 0.9f;
+		constraint.spheres = { {{-1.5f, -0.75f, 0.15f}, 0.15f},
+								{ {-1.5f, -0.25f, 0.15f}, 0.15f},
+								{ {0.2f, 0.0f, 0.3f}, 0.15f},
+								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
+		};
+		addCube(0.8f, 0.8f, 0.8f, cgp::vec3(-0.25f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, 0));
+		addCloth(3.0f, 3.0f, 3, cgp::vec3(-0.2f, 0.0f, 0.5f), cgp::vec3(0, Pi/2 + Pi/8, 0), 2);
+		break;
+	}
+	parameters.sphere3Pos = constraint.spheres[2].center;
 }
 
 void scene_structure::initialize()
@@ -68,7 +137,7 @@ void scene_structure::simulate() {
 		{
 			simulation_apply_contact_constraints(all_particles, all_shapes, prevX, constraint, dt_step / parameters.N_stabilization);
 		}
-		
+
 		//fixed points of the scene:
 		for (auto const& it : constraint.fixed_sample) {
 			int pIndex = it.first;
@@ -84,7 +153,7 @@ void scene_structure::simulate() {
 		{
 			preCalculations(all_particles, all_shapes);
 			shapeMatching(all_particles, all_shapes, parameters.alpha, parameters.beta); //check parameters
-			simulation_apply_shape_constraints(all_particles, all_shapes, constraint);
+			simulation_apply_shape_constraints(all_particles, all_shapes, constraint, parameters);
 		}
 
 		//put here the constraints of the cloth for example
@@ -125,7 +194,7 @@ void scene_structure::display(double elapsedTime)
 
 		draw(obstacle_floor, environment);
 	}
-	
+
 	constraint.spheres[2].center = parameters.sphere3Pos;
 	for (const auto& sphere : constraint.spheres)
 	{
@@ -133,8 +202,6 @@ void scene_structure::display(double elapsedTime)
 		obstacle_sphere.transform.scaling = sphere.radius;
 		draw(obstacle_sphere, environment);
 	}
-
-	//shape.elapsedTime = elapsedTime;
 
 	simulate();
 
@@ -156,8 +223,7 @@ void scene_structure::display(double elapsedTime)
 
 void scene_structure::display_gui()
 {
-	bool reset = false;
-
+	
 	ImGui::Text("Display");
 	ImGui::Checkbox("Frame", &gui.display_frame);
 	ImGui::Checkbox("Wireframe", &gui.display_wireframe);
@@ -173,9 +239,11 @@ void scene_structure::display_gui()
 
 	ImGui::Spacing(); ImGui::Spacing();
 
-	ImGui::SliderFloat("alpha", &parameters.alpha, 0.1, 2, "%.3f", 2.0f);
-	ImGui::SliderFloat("beta", &parameters.beta, 0.1, 1, "%.3f", 2.0f);
-	
+	ImGui::SliderFloat("alpha", &parameters.alpha, 0.05, 1.5, "%.3f", 1.0f);
+	ImGui::SliderFloat("beta", &parameters.beta, 0.05, 1, "%.3f", 1.0f);
+	ImGui::Spacing();
+	ImGui::SliderFloat("cloth stiffness", &parameters.clothStiffness, 0.01, 1.5f, "%.3f", 1.0f);
+
 	ImGui::Spacing(); ImGui::Spacing();
 
 	ImGui::SliderFloat("SphereX", &parameters.sphere3Pos.x, -1.8, 1.8, "%.3f", 2.0f);
@@ -185,12 +253,39 @@ void scene_structure::display_gui()
 	ImGui::Spacing(); ImGui::Spacing();
 
 	ImGui::Spacing(); ImGui::Spacing();
-	reset |= ImGui::Button("Restart");
-	if (reset) {
-		setShapes();
-		simulation_running = true;
+	
+	
+	
+	bool resetWithLinear = false;
+	resetWithLinear |= ImGui::Button("Reset with Linear");
+	if (resetWithLinear) {
+		setShapes(sc_LINEAR);
+		simulation_running = false;
+	}
+	
+	bool resetWithQuadratic = false;
+	resetWithQuadratic |= ImGui::Button("Reset with Quadratic");
+	if (resetWithQuadratic) {
+		setShapes(sc_QUADRATIC);
+		simulation_running = false;
 	}
 
+	bool resetWithCurtain = false;
+	resetWithCurtain |= ImGui::Button("Reset with Curtain");
+	if (resetWithCurtain) {
+		setShapes(sc_CURTAIN);
+		simulation_running = false;
+	}
+
+	bool resetWithTrampoline = false;
+	resetWithTrampoline |= ImGui::Button("Reset with TRAMPOLINE");
+	if (resetWithTrampoline) {
+		setShapes(sc_TRAMPOLINE);
+		simulation_running = false;
+	}
+	
+	if (ImGui::Button("Start/Stop"))
+		simulation_running = !simulation_running;
 }
 
 void scene_structure::addCube(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler) {
@@ -267,7 +362,7 @@ void scene_structure::addCube(float c_x, float c_y, float c_z, cgp::vec3 globalP
 		//if (i - indexStart < 3)
 			//constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(i, all_particles[i].position + vec3(rand_interval(0, 0.03), rand_interval(0, 0.03), rand_interval(0, 0.03))));
 	};
-	
+
 	all_shapes.push_back(shape);
 }
 void scene_structure::addCubeQuadratic(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler)
@@ -363,10 +458,10 @@ void scene_structure::addCubeQuadratic(float c_x, float c_y, float c_z, cgp::vec
 		q(0, 8) = shape.relativeLocations[i - indexStart].z * shape.relativeLocations[i - indexStart].x;
 
 		shape.AqqQuad += particle.mass * p * q;
-	} 
+	}
 
 	shape.AqqQuad = calculateInverseWithEigen(shape.AqqQuad);
-	
+
 	rotation_transform rotationy = rotation_transform::from_axis_angle(vec3(0.0, 1.0, 0.0), anglesEuler.y);
 	rotation_transform rotationx = rotation_transform::from_axis_angle(vec3(1.0, 0.0, 0.0), anglesEuler.x);
 	rotation_transform rotationz = rotation_transform::from_axis_angle(vec3(0.0, 0.0, 1.0), anglesEuler.z);
@@ -539,7 +634,7 @@ void scene_structure::addPyramid(float c, cgp::vec3 globalPosition, cgp::vec3 an
 	shape.Aqq = inverse(shape.Aqq);
 	all_shapes.push_back(shape);
 }
-void scene_structure::addCloth(float c_w, float c_h, cgp::vec3 globalPosition, cgp::vec3 anglesEuler) {
+void scene_structure::addCloth(float c_w, float c_h, int spacing, cgp::vec3 globalPosition, cgp::vec3 anglesEuler, int type) {
 	// Initial particle spacing (relative to h)
 	float const h = scene_parameters.shape_size;
 	// Fill a square with particles
@@ -551,16 +646,12 @@ void scene_structure::addCloth(float c_w, float c_h, cgp::vec3 globalPosition, c
 	int sum = 0;
 	cgp::vec3 centerOfMass = cgp::vec3(0.0, 0.0, 0.0);
 
-	float step = (3 * 0.006f);
-
-	//this part is hard coded can be optimised with further parameters in cloth TODO
-
+	float step = (spacing * 0.006f);
 
 	for (float z = -h * c_h; z <= h * c_h; z = z + step)
 	{
 		for (float y = -h * c_w; y <= h * c_w; y = y + step)
 		{
-
 			float y_p = y;
 			float z_p = z;
 			particle_element particle;
@@ -569,8 +660,6 @@ void scene_structure::addCloth(float c_w, float c_h, cgp::vec3 globalPosition, c
 			centerOfMass += particle.position;
 			sum++;
 			all_particles.push_back(particle);
-
-
 		}
 	}
 
@@ -600,8 +689,17 @@ void scene_structure::addCloth(float c_w, float c_h, cgp::vec3 globalPosition, c
 	};
 
 	////inserting fixed points
-	for (int i = 0; i < shape.width; i++) {
-		if (i % 2 == 0 || i == shape.width - 1) {
+	if (type == 0) {
+		int index1 = shape.getGlobalIndex(shape.height - 1, 0);
+		int index2 = shape.getGlobalIndex(shape.height - 1, shape.width - 1);
+		const particle_element& p1 = all_particles[index1];
+		const particle_element& p2 = all_particles[index2];
+		constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index1, p1.position));
+		constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index2, p2.position));
+	}
+	else if (type == 2) {
+		for (int i = 0; i < shape.width; i++) {
+
 			int index1 = shape.getGlobalIndex(shape.height - 1, i);
 			int index2 = shape.getGlobalIndex(0, i);
 
@@ -610,10 +708,10 @@ void scene_structure::addCloth(float c_w, float c_h, cgp::vec3 globalPosition, c
 
 			constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index1, p1.position));
 			constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index2, p2.position));
+
 		}
-	}
-	for (int i = 0; i < shape.height; i++) {
-		if (i % 2 == 0 || i == shape.height - 1) {
+		for (int i = 0; i < shape.height; i++) {
+
 			int index1 = shape.getGlobalIndex(i, shape.width - 1);
 			int index2 = shape.getGlobalIndex(i, 0);
 
@@ -622,9 +720,17 @@ void scene_structure::addCloth(float c_w, float c_h, cgp::vec3 globalPosition, c
 
 			constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index1, p1.position));
 			constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index2, p2.position));
+
 		}
 	}
-	
+	else {
+		for (int i = 0; i < shape.width; i++) {
+
+			int index1 = shape.getGlobalIndex(shape.height - 1, i);
+			const particle_element& p1 = all_particles[index1];
+			constraint.fixed_sample.insert(std::pair<int, cgp::vec3>(index1, p1.position));
+		}
+	}
 
 	//initializing lengths of springs 
 	int j = shape.width / 2;
@@ -635,9 +741,7 @@ void scene_structure::addCloth(float c_w, float c_h, cgp::vec3 globalPosition, c
 	shape.shearLength0 = norm(all_particles[globalI].position - all_particles[shape.getNeighbour(globalI, 1, 1)].position);
 	shape.bendLength0 = norm(all_particles[globalI].position - all_particles[shape.getNeighbour(globalI, 2, 0)].position);
 
-
 	all_shapes.push_back(shape);
-
 }
 
 

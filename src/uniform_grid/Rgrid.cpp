@@ -12,12 +12,12 @@ void Rgrid::initialize(int resolution)
 }
 
 void Rgrid::updateMinMax(cgp::vec3 pos) {
-    m_maxBox.x = std::max(m_maxBox.x, pos.x);
-    m_minBox.x = std::min(m_minBox.x, pos.x);
-    m_maxBox.y = std::max(m_maxBox.y, pos.y);
-    m_minBox.y = std::min(m_minBox.y, pos.y);
-    m_maxBox.z = std::max(m_maxBox.z, pos.z);
-    m_minBox.z = std::min(m_minBox.z, pos.z);
+    m_maxBox.x = std::max(m_maxBox.x, pos.x + 0.005f);
+    m_minBox.x = std::min(m_minBox.x, pos.x - 0.005f);
+    m_maxBox.y = std::max(m_maxBox.y, pos.y + 0.005f);
+    m_minBox.y = std::min(m_minBox.y, pos.y - 0.005f);
+    m_maxBox.z = std::max(m_maxBox.z, pos.z + 0.005f);
+    m_minBox.z = std::min(m_minBox.z, pos.z - 0.005f);
 }
 
 cgp::int3 Rgrid::posToIndex(cgp::vec3 pos) const

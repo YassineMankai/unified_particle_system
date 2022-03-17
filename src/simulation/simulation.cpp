@@ -4,6 +4,13 @@ using namespace cgp;
 
 
 
+
+
+
+
+// ################# Constraints #################
+
+// Helper functions
 mat9 calculateInverseWithEigen(mat9 A) {
 	Eigen::MatrixXd B = Eigen::MatrixXd::Zero(9, 9);
 
@@ -27,12 +34,6 @@ mat9 calculateInverseWithEigen(mat9 A) {
 
 
 }
-
-
-
-// ################# Constraints #################
-
-// Helper functions
 void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes) {
 	cgp::mat3 p = cgp::mat3();
 	cgp::mat3 q = cgp::mat3();
@@ -50,44 +51,34 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 		const particle_element& particle = all_particles[i];
 		shape_structure& shape = all_shapes[particle.phase];
 		if (shape.type == RIGID) {
-			p(0, 0) = particle.position.x - shape.com.x;
-			p(1, 0) = particle.position.y - shape.com.y;
-			p(2, 0) = particle.position.z - shape.com.z;
+			
+			for (int j = 0; j < 3; j++) {
+				p(j, 0) = particle.position[j] - shape.com[j];
+				q(0,j) = shape.relativeLocations[i - shape.relativeLocationsOffset][j];
+			}
 
-			q(0, 0) = shape.relativeLocations[i - shape.relativeLocationsOffset].x;
-			q(0, 1) = shape.relativeLocations[i - shape.relativeLocationsOffset].y;
-			q(0, 2) = shape.relativeLocations[i - shape.relativeLocationsOffset].z;
 
 			shape.Apq += particle.mass * p * q;
 		}
 		else if (shape.type == QUADRATIC) {
-			p(0, 0) = particle.position.x - shape.com.x;
-			p(1, 0) = particle.position.y - shape.com.y;
-			p(2, 0) = particle.position.z - shape.com.z;
-
-			q(0, 0) = shape.relativeLocations[i - shape.relativeLocationsOffset].x;
-			q(0, 1) = shape.relativeLocations[i - shape.relativeLocationsOffset].y;
-			q(0, 2) = shape.relativeLocations[i - shape.relativeLocationsOffset].z;
+			
+			for (int j = 0; j < 3; j++) {
+				p(j, 0) = particle.position[j] - shape.com[j];
+				q(0, j) = shape.relativeLocations[i - shape.relativeLocationsOffset][j];
+			}
 
 			shape.Apq += particle.mass * p * q;
 
 			cgp::vec9& q = shape.qQuad[i - shape.relativeLocationsOffset];
 
-			pQuad(0, 0) = particle.position.x - shape.com.x;
-			pQuad(1, 0) = particle.position.y - shape.com.y;
-			pQuad(2, 0) = particle.position.z - shape.com.z;
+			for (int j = 0; j < 3; j++) {
+				pQuad(j, 0) = particle.position[j] - shape.com[j];
+			}
 
-			qQuad(0, 0) = q(0);
-			qQuad(0, 1) = q(1);
-			qQuad(0, 2) = q(2);
 
-			qQuad(0, 3) = q(3);
-			qQuad(0, 4) = q(4);
-			qQuad(0, 5) = q(5);
-
-			qQuad(0, 6) = q(6);
-			qQuad(0, 7) = q(7);
-			qQuad(0, 8) = q(8);
+			for (int i = 0; i < 9; i++) {
+				qQuad(0, i) = q(i);
+			}
 
 
 			shape.ApqQuad += particle.mass * pQuad * qQuad;
@@ -109,9 +100,11 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 			Eigen::MatrixXcd Vc = es.eigenvectors();
 			Eigen::MatrixXd D = Dc.real();
 			Eigen::MatrixXd V = Vc.real();
-			D(0, 0) = 1.f / sqrt(D(0, 0));
-			D(1, 1) = 1.f / sqrt(D(1, 1));
-			D(2, 2) = 1.f / sqrt(D(2, 2));
+
+			for (int j = 0; j < 3; j++) {
+				D(j,j) = 1.f / sqrt(D(j, j));
+			}
+
 			Eigen::MatrixXd Sinv = (V * D * V.inverse());
 			cgp::mat3 S_ = cgp::mat3();
 
@@ -139,9 +132,10 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 			Eigen::MatrixXcd Vc = es.eigenvectors();
 			Eigen::MatrixXd D = Dc.real();
 			Eigen::MatrixXd V = Vc.real();
-			D(0, 0) = 1.f / sqrt(D(0, 0));
-			D(1, 1) = 1.f / sqrt(D(1, 1));
-			D(2, 2) = 1.f / sqrt(D(2, 2));
+			for (int j = 0; j < 3; j++) {
+				D(j, j) = 1.f / sqrt(D(j, j));
+			}
+			
 			Eigen::MatrixXd Sinv = (V * D * V.inverse());
 			cgp::mat3 S_ = cgp::mat3();
 			for (int i = 0; i < 3; i++) {

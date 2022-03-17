@@ -96,19 +96,14 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 
 	for (int i = 0; i < all_shapes.size(); i++) {
 		shape_structure& shape = all_shapes[i];
-
 		if (shape.type == RIGID) {
 			cgp::mat3 sym = transpose(shape.Apq) * shape.Apq;
 			Eigen::MatrixXd A(3, 3);
-			A(0, 0) = sym(0, 0);
-			A(0, 1) = sym(0, 1);
-			A(0, 2) = sym(0, 2);
-			A(1, 0) = sym(1, 0);
-			A(1, 1) = sym(1, 1);
-			A(1, 2) = sym(1, 2);
-			A(2, 0) = sym(2, 0);
-			A(2, 1) = sym(2, 1);
-			A(2, 2) = sym(2, 2);
+			for (int i = 0; i < 3; i++) {
+				for (int j = 0; j < 3; j++) {
+					A(i, j) = sym(i, j);
+				}
+			}
 			Eigen::EigenSolver <Eigen::MatrixXd > es(A);
 			Eigen::MatrixXcd Dc = es.eigenvalues().asDiagonal();
 			Eigen::MatrixXcd Vc = es.eigenvectors();
@@ -119,17 +114,13 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 			D(2, 2) = 1.f / sqrt(D(2, 2));
 			Eigen::MatrixXd Sinv = (V * D * V.inverse());
 			cgp::mat3 S_ = cgp::mat3();
-			S_(0, 0) = Sinv(0, 0);
-			S_(0, 1) = Sinv(0, 1);
-			S_(0, 2) = Sinv(0, 2);
-			S_(1, 0) = Sinv(1, 0);
-			S_(1, 1) = Sinv(1, 1);
-			S_(1, 2) = Sinv(1, 2);
-			S_(2, 0) = Sinv(2, 0);
-			S_(2, 1) = Sinv(2, 1);
-			S_(2, 2) = Sinv(2, 2);
-			cgp::mat3 result = shape.Apq * S_;
 
+			for (int i = 0; i < 3; i++) {
+				for (int j = 0; j < 3; j++) {
+					S_(i, j) = Sinv(i, j);
+				}
+			}
+			cgp::mat3 result = shape.Apq * S_;
 			shape.optimalRotation = result;
 			shape.A = shape.Apq * shape.Aqq;
 			shape.A = shape.A / pow(cgp::det(shape.A), 1.f / 3.f);
@@ -137,15 +128,12 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 		else if (shape.type == QUADRATIC) {
 			cgp::mat3 sym = transpose(shape.Apq) * shape.Apq;
 			Eigen::MatrixXd A(3, 3);
-			A(0, 0) = sym(0, 0);
-			A(0, 1) = sym(0, 1);
-			A(0, 2) = sym(0, 2);
-			A(1, 0) = sym(1, 0);
-			A(1, 1) = sym(1, 1);
-			A(1, 2) = sym(1, 2);
-			A(2, 0) = sym(2, 0);
-			A(2, 1) = sym(2, 1);
-			A(2, 2) = sym(2, 2);
+
+			for (int i = 0; i < 3; i++) {
+				for (int j = 0; j < 3; j++) {
+					A(i, j) = sym(i, j);
+				}
+			}
 			Eigen::EigenSolver <Eigen::MatrixXd > es(A);
 			Eigen::MatrixXcd Dc = es.eigenvalues().asDiagonal();
 			Eigen::MatrixXcd Vc = es.eigenvectors();
@@ -156,64 +144,36 @@ void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp:
 			D(2, 2) = 1.f / sqrt(D(2, 2));
 			Eigen::MatrixXd Sinv = (V * D * V.inverse());
 			cgp::mat3 S_ = cgp::mat3();
-			S_(0, 0) = Sinv(0, 0);
-			S_(0, 1) = Sinv(0, 1);
-			S_(0, 2) = Sinv(0, 2);
-			S_(1, 0) = Sinv(1, 0);
-			S_(1, 1) = Sinv(1, 1);
-			S_(1, 2) = Sinv(1, 2);
-			S_(2, 0) = Sinv(2, 0);
-			S_(2, 1) = Sinv(2, 1);
-			S_(2, 2) = Sinv(2, 2);
+			for (int i = 0; i < 3; i++) {
+				for (int j = 0; j < 3; j++) {
+					S_(i, j) = Sinv(i, j);
+				}
+			}
 			cgp::mat3 result = shape.Apq * S_;
 
 			cgp::mat39& rotation = shape.optimalRotationQuad;
 
 			rotation = cgp::mat39();
-
-			rotation(0, 0) = result(0, 0);
-			rotation(0, 1) = result(0, 1);
-			rotation(0, 2) = result(0, 2);
-
-			rotation(1, 0) = result(1, 0);
-			rotation(1, 1) = result(1, 1);
-			rotation(1, 2) = result(1, 2);
-
-			rotation(2, 0) = result(2, 0);
-			rotation(2, 1) = result(2, 1);
-			rotation(2, 2) = result(2, 2);
-
-
+			for (int i = 0; i < 3; i++) {
+				for (int j = 0; j < 3; j++) {
+					rotation(i, j) = result(i, j);
+				}
+			}
 			cgp::mat39 aQuad = shape.ApqQuad * shape.AqqQuad;
 
 			cgp::mat3 A_ = cgp::mat3();
 
-			A_(0, 0) = aQuad(0, 0);
-			A_(1, 0) = aQuad(1, 0);
-			A_(2, 0) = aQuad(2, 0);
-
-			A_(0, 1) = aQuad(0, 1);
-			A_(1, 1) = aQuad(1, 1);
-			A_(2, 1) = aQuad(2, 1);
-
-			A_(0, 2) = aQuad(0, 2);
-			A_(1, 2) = aQuad(1, 2);
-			A_(2, 2) = aQuad(2, 2);
-
+			for (int i = 0; i < 3; i++) {
+				for (int j = 0; j < 3; j++) {
+					A_(i, j) = aQuad(i, j);
+				}
+			}
 			A_ = A_ / pow(cgp::det(A_), 1.f / 3.f);
-
-			aQuad(0, 0) = A_(0, 0);
-			aQuad(1, 0) = A_(1, 0);
-			aQuad(2, 0) = A_(2, 0);
-
-			aQuad(0, 1) = A_(0, 1);
-			aQuad(1, 1) = A_(1, 1);
-			aQuad(2, 1) = A_(2, 1);
-
-			aQuad(0, 2) = A_(0, 2);
-			aQuad(1, 2) = A_(1, 2);
-			aQuad(2, 2) = A_(2, 2);
-
+			for (int i = 0; i < 3; i++) {
+				for (int j = 0; j < 3; j++) {
+					aQuad(i, j) = A_(i, j);
+				}
+			}
 			shape.AQuad = aQuad;
 		}
 	}
@@ -430,12 +390,12 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 		const particle_element& particle = all_particles[i];
 		regularGrids[particle.phase].updateMinMax(particle.position);
 	}
-	
+
 	for (int i = 0; i < all_particles.size(); i++) {
 		const particle_element& particle = all_particles[i];
 		regularGrids[particle.phase].insert(particle.position, i);
 	}
-	
+
 	// env contacts
 	int const N = all_particles.size();
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
@@ -450,7 +410,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				all_particles[pIndex].nbConstraint += 1;
 				vec3 vn = dot(v, wall.normal) * wall.normal;
 				vec3 vpar = v - vn;
-				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4* vpar - v) * dt; //cube
+				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; //cube
 				all_particles[pIndex].nbConstraintTest += 1;
 			}
 		}
@@ -490,7 +450,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				float diff = 0.01f * 2 - detection;
 				vec3 dx = (epsilon + diff / 2.0) * u;
 				particle1.dx += dx;
-				particle2.dx += - dx;
+				particle2.dx += -dx;
 
 				particle1.nbConstraint += 1;
 				particle2.nbConstraint += 1;
@@ -520,7 +480,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 			if (particle.nbConstraintTest > 0) {
 				prevX[i] -= particle.dx_friction_and_restitution / particle.nbConstraintTest;
 				particle.nbConstraintTest = 0;
-				particle.dx_friction_and_restitution = vec3(0,0,0);
+				particle.dx_friction_and_restitution = vec3(0, 0, 0);
 			}
 			particle.nbConstraint = 0;
 			particle.dx = vec3(0, 0, 0);
@@ -562,7 +522,7 @@ void adjustVelocity(cgp::buffer<particle_element>& all_particles, cgp::buffer<cg
 	for (int index = 0; index < all_particles.size(); index++) {
 		particle_element& particle = all_particles[index];
 		particle.velocity = (particle.position - prevX[index]) / dt;
-		
+
 		//can consider freezing time per shape, it depends on the simulation
 		if (norm(particle.position - prevX[index]) < 0.0001) {
 			particle.position = prevX[index];

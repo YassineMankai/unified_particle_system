@@ -9,7 +9,7 @@
 #define EIGEN_INITIALIZE_MATRICES_BY_ZERO
 #include "../third_party/eigen/Eigen/EigenValues"
 #include "../third_party/eigen/Eigen/Eigen"
-
+#include "custom_special_types.hpp"
 
 
 struct simulation_parameters

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "custom_special_types.hpp"
 #include "cgp/cgp.hpp"
 
 

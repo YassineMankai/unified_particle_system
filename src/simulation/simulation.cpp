@@ -266,104 +266,29 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 			//int numberOfConstraints = shape.width*shape.height*3; //204
 			int numberOfConstraints = 0; //204
 
-			//structure constraints
-			L = shape.structLength0;
-			index1 = shape.getNeighbour(pIndex, 1, 0);
-			index2 = shape.getNeighbour(pIndex, -1, 0);
-			index3 = shape.getNeighbour(pIndex, 0, 1);
-			index4 = shape.getNeighbour(pIndex, 0, -1);
+			cgp::buffer<float> Ls = { shape.structLength0,shape.structLength0,shape.structLength0,shape.structLength0,
+									shape.shearLength0,shape.shearLength0 ,shape.shearLength0,shape.shearLength0,
+									shape.bendLength0 ,shape.bendLength0 ,shape.bendLength0 ,shape.bendLength0 };
+			cgp::buffer<int> is = {
+				1,-1,0,0
+				,1,-1,1,-1
+				,0,0,2,-2 };
+
+			cgp::buffer<int> js = {
+				0,0,1,-1,
+				1,-1,-1,1,
+				2,-2,0,0 };
 
 
-			if (index1 != -1) {
-				const particle_element& p = all_particles[index1];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			if (index2 != -1) {
-				const particle_element& p = all_particles[index2];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			if (index3 != -1) {
-				const particle_element& p = all_particles[index3];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			if (index4 != -1) {
-				const particle_element& p = all_particles[index4];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			//shear constraints
-			L = shape.shearLength0;
-			index1 = shape.getNeighbour(pIndex, 1, 1);
-			index2 = shape.getNeighbour(pIndex, -1, -1);
-			index3 = shape.getNeighbour(pIndex, 1, -1);
-			index4 = shape.getNeighbour(pIndex, -1, 1);
+			for (int h = 0; h < Ls.size(); h++) {
+				int index = shape.getNeighbour(pIndex, is[h], js[h]);
 
-
-			if (index1 != -1) {
-				const particle_element& p = all_particles[index1];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			if (index2 != -1) {
-				const particle_element& p = all_particles[index2];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			if (index3 != -1) {
-				const particle_element& p = all_particles[index3];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			if (index4 != -1) {
-				const particle_element& p = all_particles[index4];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-
-
-			//bending constraints
-			L = shape.bendLength0;
-			index1 = shape.getNeighbour(pIndex, 0, 2);
-
-			index2 = shape.getNeighbour(pIndex, 0, -2);
-			index3 = shape.getNeighbour(pIndex, 2, 0);
-			index4 = shape.getNeighbour(pIndex, -2, 0);
-
-
-			if (index1 != -1) {
-				const particle_element& p = all_particles[index1];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			if (index2 != -1) {
-				const particle_element& p = all_particles[index2];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			if (index3 != -1) {
-				const particle_element& p = all_particles[index3];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
-			}
-			if (index4 != -1) {
-				const particle_element& p = all_particles[index4];
-				float  distance = norm(p.position - particle.position);
-				dx += k * (distance - L) * normalize(p.position - particle.position);
-				numberOfConstraints++;
+				if (index != -1) {
+					const particle_element& p = all_particles[index];
+					float  distance = norm(p.position - particle.position);
+					dx += k * (distance - Ls[h]) * normalize(p.position - particle.position);
+					numberOfConstraints++;
+				}
 			}
 			x += dx / numberOfConstraints;
 

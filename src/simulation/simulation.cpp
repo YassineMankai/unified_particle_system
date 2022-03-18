@@ -404,7 +404,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				all_particles[pIndex].nbConstraint += 1;
 				vec3 vn = dot(v, wall.normal) * wall.normal;
 				vec3 vpar = v - vn;
-				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; //cube
+				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; 
 				all_particles[pIndex].nbConstraintTest += 1;
 			}
 		}
@@ -416,7 +416,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				all_particles[pIndex].nbConstraint += 1;
 				vec3 vn = dot(v, dir) * dir;
 				vec3 vpar = v - vn;
-				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; //cube
+				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; 
 				all_particles[pIndex].nbConstraintTest += 1;
 			}
 		}
@@ -452,7 +452,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				particle2.nbConstraintTest += 1;
 				
 				if (norm(dx) > 0.005 * dt) {
-					float projected_correction = 2.6 * dot(dx, u);
+					float projected_correction = dot(dx, u);
 					particle1.dx_friction_and_restitution += projected_correction * u;
 					particle2.dx_friction_and_restitution += -projected_correction * u;
 				}

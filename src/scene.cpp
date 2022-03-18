@@ -54,10 +54,10 @@ void scene_structure::setShapes(DemoScene demoType) {
 		addCloth(3.0f, 4.0f, 4, cgp::vec3(-0.1f, 0.0f, 0.5f), cgp::vec3(0, 0, 0), 1);
 		break;
 	case sc_TRAMPOLINE:
-		parameters.dt = 0.014f;
+		parameters.dt = 0.018f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 12;
+		parameters.N_step = 10;
 		parameters.N_stabilization = 2;
 		parameters.N_solver = 2;
 		parameters.clothStiffness = 0.9f;

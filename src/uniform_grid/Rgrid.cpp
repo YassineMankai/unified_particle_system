@@ -40,7 +40,7 @@ cgp::buffer<int> Rgrid::getNeighborhood(vec3 pos) const
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
             for (int dz = -1; dz <= 1; dz++) {
-                cgp::int3 new_cell = cell + cgp::int3(dx, dy, dz);
+                cgp::int3 new_cell = { cell.x + dx, cell.y + dy, cell.z + dz };
                 if (new_cell.x >= 0 && new_cell.x < m_resolution
                  && new_cell.y >= 0 && new_cell.y < m_resolution
                  && new_cell.z >= 0 && new_cell.z < m_resolution)

@@ -67,9 +67,9 @@ struct scene_structure {
 	void display(double elapsedTime);     // The frame display to be called within the animation loop
 	void display_gui(); // The display of the GUI, also called within the animation loop
 	
-	void addCube(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	void addCube(float c_x, float c_y, float c_z, int spacing, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	
-	void addCubeQuadratic(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
+	void addCubeQuadratic(float c_x, float c_y, float c_z, int spacing, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	
 	void addSphere(float c, cgp::vec3 globalPosition, cgp::vec3 anglesEuler);
 	

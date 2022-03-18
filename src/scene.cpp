@@ -13,61 +13,61 @@ void scene_structure::setShapes(DemoScene demoType) {
 		parameters.dt = 0.018f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 10;
-		parameters.N_stabilization = 4;
-		parameters.N_solver = 2;
+		parameters.N_step = 8;
+		parameters.N_stabilization = 2;
+		parameters.N_solver = 5;
 		constraint.spheres = { {{-0.22f, 0.0f, 0.15f}, 0.15f},
 								{ {0.22f, 0.0f, 0.15f}, 0.15f},
 								{ {0.0f, -0.22f, 0.15f}, 0.15f},
 								{ {0.0f, 0.22f, 0.15f}, 0.15f},
 		};
-		addCube(1.2f, 1.2f, 1.2f, cgp::vec3(0.0f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, Pi / 4));
+		addCube(1.4f, 1.4f, 1.4f, 2, cgp::vec3(0.0f, 0.0f, 0.6f), cgp::vec3(0, 0, 0));
 		break;
 	case sc_QUADRATIC:
-		parameters.dt = 0.018f;
+		parameters.dt = 0.020f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 10;
-		parameters.N_stabilization = 4;
-		parameters.N_solver = 2;
+		parameters.N_step = 8;
+		parameters.N_stabilization = 2;
+		parameters.N_solver = 5;
 		constraint.spheres = { {{-0.22f, 0.0f, 0.15f}, 0.15f},
 								{ {0.22f, 0.0f, 0.15f}, 0.15f},
 								{ {0.0f, -0.22f, 0.15f}, 0.15f},
 								{ {0.0f, 0.22f, 0.15f}, 0.15f},
 		};
-		addCubeQuadratic(1.2f, 1.2f, 1.2f, cgp::vec3(0.0f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, Pi / 4));
+		addCubeQuadratic(1.2f, 1.2f, 1.2f, 2, cgp::vec3(0.0f, 0.0f, 0.6f), cgp::vec3(0, 0, 0));
 		break;
 	case sc_CURTAIN:
 		parameters.dt = 0.020f;
 		parameters.alpha = 0.3f;
 		parameters.beta = 0.15f;
-		parameters.N_step = 12;
+		parameters.N_step = 8;
 		parameters.N_stabilization = 2;
-		parameters.N_solver = 2;
+		parameters.N_solver = 4;
+		parameters.clothStiffness = 0.9f;
+		constraint.spheres = { {{-1.5f, -0.75f, 0.15f}, 0.15f},
+								{ {-1.5f, -0.25f, 0.15f}, 0.15f},
+								{ {0.2f, 0.0f, 0.4f}, 0.15f},
+								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
+		};
+		addCube(1.0f, 1.0f, 1.0f, 2, cgp::vec3(0.05f, 0.0f, 0.7f), cgp::vec3(0, Pi / 4, 0));
+		addCloth(3.0f, 4.0f, 3, cgp::vec3(-0.05f, 0.0f, 0.5f), cgp::vec3(0, 0, 0), 1);
+		break;
+	case sc_TRAMPOLINE:
+		parameters.dt = 0.02f;
+		parameters.alpha = 0.8f;
+		parameters.beta = 0.5f;
+		parameters.N_step = 10;
+		parameters.N_stabilization = 4;
+		parameters.N_solver = 4;
 		parameters.clothStiffness = 0.9f;
 		constraint.spheres = { {{-1.5f, -0.75f, 0.15f}, 0.15f},
 								{ {-1.5f, -0.25f, 0.15f}, 0.15f},
 								{ {0.2f, 0.0f, 0.3f}, 0.15f},
 								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
 		};
-		addCube(1.0f, 1.0f, 1.0f, cgp::vec3(0.15f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, 0));
-		addCloth(3.0f, 4.0f, 4, cgp::vec3(-0.1f, 0.0f, 0.2f), cgp::vec3(0, 0, 0), 1);
-		break;
-	case sc_TRAMPOLINE:
-		parameters.dt = 0.02f;
-		parameters.alpha = 0.8f;
-		parameters.beta = 0.5f;
-		parameters.N_step = 12;
-		parameters.N_stabilization = 4;
-		parameters.N_solver = 2;
-		parameters.clothStiffness = 1.2f;
-		constraint.spheres = { {{-1.5f, -0.75f, 0.15f}, 0.15f},
-								{ {-1.5f, -0.25f, 0.15f}, 0.15f},
-								{ {0.2f, 0.0f, 0.3f}, 0.15f},
-								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
-		};
-		addCube(0.8f, 0.8f, 0.8f, cgp::vec3(-0.25f, 0.0f, 1.2f), cgp::vec3(Pi / 4, Pi / 4, 0));
-		addCloth(3.0f, 3.0f, 3, cgp::vec3(-0.2f, 0.0f, 0.4f), cgp::vec3(0, Pi / 2 + Pi / 12, 0), 2);
+		addCube(0.8f, 0.8f, 0.8f, 2, cgp::vec3(-0.25f, 0.0f, 1.2f), cgp::vec3(Pi / 4, Pi / 4, 0));
+		addCloth(3.0f, 3.0f, 2, cgp::vec3(-0.2f, 0.0f, 0.4f), cgp::vec3(0, Pi / 2 + Pi / 12, 0), 2);
 		break;
 	}
 	parameters.sphere3Pos = constraint.spheres[2].center;
@@ -117,7 +117,22 @@ void scene_structure::simulate() {
 		// ****************************** //
 		simulation_numerical_integration(all_particles, dt_step);
 
+		// update neighborhood data
+		std::vector<Rgrid> regularGrids;
+		for (int i = 0; i < all_shapes.size(); i++) {
+			regularGrids.push_back(Rgrid());
+			regularGrids.back().initialize(20);
+		}
 
+		for (int i = 0; i < all_particles.size(); i++) {
+			const particle_element& particle = all_particles[i];
+			regularGrids[particle.phase].updateMinMax(particle.position);
+		}
+
+		for (int i = 0; i < all_particles.size(); i++) {
+			const particle_element& particle = all_particles[i];
+			regularGrids[particle.phase].insert(particle.position, i);
+		}
 
 		// ****************************** //
 		// Solve contact constraints
@@ -125,14 +140,7 @@ void scene_structure::simulate() {
 
 		for (int k_stabilization = 0; simulation_running == true && k_stabilization < parameters.N_stabilization; ++k_stabilization)
 		{
-			simulation_apply_contact_constraints(all_particles, all_shapes, prevX, constraint, dt_step / parameters.N_stabilization);
-		}
-
-		//fixed points of the scene:
-		for (auto const& it : constraint.fixed_sample) {
-			int pIndex = it.first;
-			particle_element& particle = all_particles[pIndex];
-			particle.position = it.second;
+			simulation_apply_contact_constraints(all_particles, all_shapes, regularGrids, prevX, constraint, dt_step / parameters.N_stabilization);
 		}
 
 		// ****************************** //
@@ -144,6 +152,7 @@ void scene_structure::simulate() {
 			preCalculations(all_particles, all_shapes);
 			shapeMatching(all_particles, all_shapes, parameters.alpha, parameters.beta); //check parameters
 			simulation_apply_shape_constraints(all_particles, all_shapes, constraint, parameters);
+			simulation_apply_contact_constraints(all_particles, all_shapes, regularGrids, prevX, constraint, dt_step / parameters.N_solver);
 		}
 
 		//put here the constraints of the cloth for example
@@ -270,7 +279,7 @@ void scene_structure::display_gui()
 		simulation_running = !simulation_running;
 }
 
-void scene_structure::addCube(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler) {
+void scene_structure::addCube(float c_x, float c_y, float c_z, int spacing, cgp::vec3 globalPosition, cgp::vec3 anglesEuler) {
 	// Initial particle spacing (relative to h)
 	float const h = scene_parameters.shape_size;
 	// Fill a square with particles
@@ -286,11 +295,11 @@ void scene_structure::addCube(float c_x, float c_y, float c_z, cgp::vec3 globalP
 	int sum = 0;
 	cgp::vec3 centerOfMass = cgp::vec3(0.0, 0.0, 0.0);
 
-	for (float x = -h * c_x; x <= h * c_x; x = x + (2 * 0.01f))
+	for (float x = -h * c_x; x <= h * c_x; x = x + (spacing * 0.01f))
 	{
-		for (float y = -h * c_y; y <= h * c_y; y = y + (2 * 0.01f))
+		for (float y = -h * c_y; y <= h * c_y; y = y + (spacing * 0.01f))
 		{
-			for (float z = -h * c_z; z <= h * c_z; z = z + (2 * 0.01f))
+			for (float z = -h * c_z; z <= h * c_z; z = z + (spacing * 0.01f))
 			{
 				float x_p = x;
 				float y_p = y;
@@ -347,7 +356,7 @@ void scene_structure::addCube(float c_x, float c_y, float c_z, cgp::vec3 globalP
 
 	all_shapes.push_back(shape);
 }
-void scene_structure::addCubeQuadratic(float c_x, float c_y, float c_z, cgp::vec3 globalPosition, cgp::vec3 anglesEuler)
+void scene_structure::addCubeQuadratic(float c_x, float c_y, float c_z, int spacing, cgp::vec3 globalPosition, cgp::vec3 anglesEuler)
 {
 	// Initial particle spacing (relative to h)
 	float const h = scene_parameters.shape_size;
@@ -361,11 +370,11 @@ void scene_structure::addCubeQuadratic(float c_x, float c_y, float c_z, cgp::vec
 	shape.relativeLocationsOffset = indexStart;
 	int sum = 0;
 	cgp::vec3 centerOfMass = cgp::vec3(0.0, 0.0, 0.0);
-	for (float x = -h * c_x; x <= h * c_x; x = x + (2 * 0.01f))
+	for (float x = -h * c_x; x <= h * c_x; x = x + (spacing * 0.01f))
 	{
-		for (float y = -h * c_y; y <= h * c_y; y = y + (2 * 0.01f))
+		for (float y = -h * c_y; y <= h * c_y; y = y + (spacing * 0.01f))
 		{
-			for (float z = -h * c_z; z <= h * c_z; z = z + (2 * 0.01f))
+			for (float z = -h * c_z; z <= h * c_z; z = z + (spacing * 0.01f))
 			{
 				float x_p = x;
 				float y_p = y;
@@ -628,7 +637,7 @@ void scene_structure::addCloth(float c_w, float c_h, int spacing, cgp::vec3 glob
 	int sum = 0;
 	cgp::vec3 centerOfMass = cgp::vec3(0.0, 0.0, 0.0);
 
-	float step = (spacing * 0.006f);
+	float step = (spacing * 0.01f);
 
 	for (float z = -h * c_h; z <= h * c_h; z = z + step)
 	{

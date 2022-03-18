@@ -12,9 +12,7 @@ struct particle_element
     cgp::vec3 velocity; // Speed
     cgp::vec3 force; // Force
     int nbConstraint = 0;
-    int nbConstraintFrictionRestitution = 0;
     cgp::vec3 dx = cgp::vec3(0,0,0); 
-    cgp::vec3 dx_friction_and_restitution = cgp::vec3(0,0,0); 
     float mass = 1;
     int phase;
 

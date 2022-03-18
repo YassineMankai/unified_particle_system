@@ -39,7 +39,8 @@ void shapeMatching(cgp::buffer<particle_element>& all_particles, cgp::buffer<sha
 
 void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes, constraint_structure const& constraint, simulation_parameters const& parameters);
 
-void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, const cgp::buffer<shape_structure>& all_shapes, cgp::buffer<cgp::vec3>& prevX,  constraint_structure const& constraint, float dt);
+void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, const cgp::buffer<shape_structure>& all_shapes, std::vector<Rgrid> const& regularGrids, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float dt);
+void simulation_apply_stabilization_contact_constraints(cgp::buffer<particle_element>& all_particles, const cgp::buffer<shape_structure>& all_shapes, std::vector<Rgrid> const& regularGrids, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float dt);
 
 void calculateOptimalRotation(cgp::buffer<particle_element>& all_particles, cgp::buffer<shape_structure>& all_shapes);
 

@@ -297,25 +297,88 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 }
 
 // Constraints related to the environment (walls, obstacles, fixed points, particle-particle)
-void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, const cgp::buffer<shape_structure>& all_shapes, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float dt)
+void simulation_apply_stabilization_contact_constraints(cgp::buffer<particle_element>& all_particles, const cgp::buffer<shape_structure>& all_shapes, std::vector<Rgrid> const& regularGrids, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float dt)
 {
-	// update neighborhood data
-	std::vector<Rgrid> regularGrids;
-	for (int i = 0; i < all_shapes.size(); i++) {
-		regularGrids.push_back(Rgrid());
-		regularGrids.back().initialize(20);
+	// particle-env contacts
+	int const N = all_particles.size();
+	for (int pIndex = 0; pIndex < N; ++pIndex) {
+		vec3& v = all_particles[pIndex].velocity;
+		vec3& p = all_particles[pIndex].position;
+		vec3& dx = all_particles[pIndex].dx;
+		for (const auto& wall : constraint.walls) {
+
+			if (dot(prevX[pIndex] - wall.point, wall.normal) < 0.01) {
+				vec3 dp = (-dot(prevX[pIndex] - wall.point, wall.normal) + 0.01) * wall.normal;
+				dx += dp;
+				all_particles[pIndex].nbConstraint += 1;
+			}
+		}
+		for (const auto& sphere : constraint.spheres) {
+
+			if (norm(sphere.center - prevX[pIndex]) < sphere.radius + 0.01) {
+				vec3 dir = (prevX[pIndex] - sphere.center) / norm(prevX[pIndex] - sphere.center);
+				dx += sphere.center + (sphere.radius + 0.01) * dir - prevX[pIndex];
+				all_particles[pIndex].nbConstraint += 1;
+			}
+		}
 	}
 
+	// particle-particle contact
+	for (int p1 = 0; p1 < all_particles.size(); p1++)
+	{
+		particle_element& particle1 = all_particles[p1];
+
+		// retrieve neighbor particles
+		std::vector<int> neighborhood;
+		for (int i = 0; i < all_shapes.size(); i++) {
+			std::vector<int> res = regularGrids[i].getNeighborhood(particle1.position);
+			neighborhood.insert(neighborhood.end(), res.begin(), res.end());
+		}
+
+		// project collision constraint
+		float const epsilon = 1e-5f;
+		for (int i = 0; i < neighborhood.size(); i++)
+		{
+			int p2 = neighborhood[i];
+			particle_element& particle2 = all_particles[p2];
+			if (particle1.phase == particle2.phase)
+				continue;
+			float detection = norm(prevX[p1] - prevX[p2]);
+			if (detection <= 0.01f * 2) { //TODO: use correct sphere radius
+				vec3 u = (prevX[p1] - prevX[p2]) / detection;
+				float diff = 0.01f * 2 - detection;
+				vec3 dx = (epsilon + diff / 2.0) * u;
+
+				particle1.dx += dx;
+				particle2.dx += -dx;
+
+				particle1.nbConstraint += 1;
+				particle2.nbConstraint += 1;
+			}
+		}
+	}
+
+	// Apply dx
 	for (int i = 0; i < all_particles.size(); i++) {
-		const particle_element& particle = all_particles[i];
-		regularGrids[particle.phase].updateMinMax(particle.position);
+		particle_element& particle = all_particles[i];
+		if (particle.nbConstraint > 0) {
+			particle.position += 1.8f * particle.dx / particle.nbConstraint;
+			prevX[i] += particle.dx / particle.nbConstraint;
+			particle.nbConstraint = 0;
+			particle.dx = vec3(0, 0, 0);
+		}
 	}
-
-	for (int i = 0; i < all_particles.size(); i++) {
-		const particle_element& particle = all_particles[i];
-		regularGrids[particle.phase].insert(particle.position, i);
+	//fixed points of the scene:
+	for (auto const& it : constraint.fixed_sample) {
+		int pIndex = it.first;
+		particle_element& particle = all_particles[pIndex];
+		particle.position = it.second;
+		particle.velocity = vec3(0, 0, 0);
 	}
+}
 
+void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, const cgp::buffer<shape_structure>& all_shapes, std::vector<Rgrid> const& regularGrids, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float dt)
+{
 	// particle-env contacts
 	int const N = all_particles.size();
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
@@ -330,8 +393,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				all_particles[pIndex].nbConstraint += 1;
 				vec3 vn = dot(v, wall.normal) * wall.normal;
 				vec3 vpar = v - vn;
-				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; 
-				all_particles[pIndex].nbConstraintFrictionRestitution += 1;
+				dx += (0.4 * vpar - v) * dt;
 			}
 		}
 		for (const auto& sphere : constraint.spheres) {
@@ -342,8 +404,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				all_particles[pIndex].nbConstraint += 1;
 				vec3 vn = dot(v, dir) * dir;
 				vec3 vpar = v - vn;
-				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; 
-				all_particles[pIndex].nbConstraintFrictionRestitution += 1;
+				dx += (0.4 * vpar - v) * dt;
 			}
 		}
 	}
@@ -371,8 +432,8 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 			float detection = norm(particle1.position - particle2.position);
 			if (detection <= 0.01f * 2) { //TODO: use correct sphere radius
 				vec3 u = (particle1.position - particle2.position) / detection;
-				float diff = 0.01f * 2 - detection;
-				vec3 dx = (epsilon + diff / 2.0) * u;
+				float d = 0.01f - detection / 2.0f;
+				vec3 dx = (epsilon + d) * u;
 				
 				particle1.dx += dx;
 				particle2.dx += -dx;
@@ -380,18 +441,22 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				particle1.nbConstraint += 1;
 				particle2.nbConstraint += 1;
 				
-				particle1.nbConstraintFrictionRestitution += 1;
-				particle2.nbConstraintFrictionRestitution += 1;
-
-				if (norm(dx) > 0.01 * dt) {
-					particle1.dx_friction_and_restitution += dx;
-					particle2.dx_friction_and_restitution += -dx;
+				u = normalize(particle1.position - particle2.position);
+				vec3 relative_displacement = (particle1.position - prevX[p1]) - (particle2.position - prevX[p2]);
+				vec3 rd_normal = dot(relative_displacement, u) * u;
+				vec3 rd_tangential = relative_displacement - rd_normal;
+				float rd_tan_norm = norm(rd_tangential);
+				vec3 restitution = - 0.3f * rd_normal;
+				vec3 friction;
+				if (0.503 * d > rd_tan_norm) {
+					friction = 0.5f * rd_tangential;
 				}
 				else
 				{
-					particle1.dx_friction_and_restitution += -particle1.velocity * dt / 3.f;
-					particle2.dx_friction_and_restitution += -particle2.velocity * dt / 3.f;
+					friction = 0.5f * rd_tangential * std::min(0.403f * d / rd_tan_norm, 1.0f);
 				}
+				particle1.dx += friction + restitution;
+				particle2.dx -= (friction + restitution);
 			}
 		}
 	}
@@ -400,18 +465,19 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 	for (int i = 0; i < all_particles.size(); i++) {
 		particle_element& particle = all_particles[i];
 		if (particle.nbConstraint > 0) {
-			particle.position += particle.dx / particle.nbConstraint;
-			prevX[i] += particle.dx / particle.nbConstraint;
-			if (particle.nbConstraintFrictionRestitution > 0) {
-				prevX[i] -= particle.dx_friction_and_restitution / particle.nbConstraintFrictionRestitution;
-				particle.nbConstraintFrictionRestitution = 0;
-				particle.dx_friction_and_restitution = vec3(0, 0, 0);
-			}
+			particle.position += 1.8f * particle.dx / particle.nbConstraint;
 			particle.nbConstraint = 0;
 			particle.dx = vec3(0, 0, 0);
 		}
 	}
 
+	//fixed points of the scene:
+	for (auto const& it : constraint.fixed_sample) {
+		int pIndex = it.first;
+		particle_element& particle = all_particles[pIndex];
+		particle.position = it.second;
+		particle.velocity = vec3(0, 0, 0);
+	}
 }
 
 
@@ -423,6 +489,9 @@ void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp:
 	const vec3 g = { 0,0,-9.8f };
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		all_particles[pIndex].force = all_particles[pIndex].mass * g;
+		if (all_shapes[all_particles[pIndex].phase].type == CLOTH) {
+			all_particles[pIndex].force -= 0.2f * all_particles[pIndex].mass * all_particles[pIndex].velocity; // drag
+		}
 	}
 }
 void simulation_numerical_integration(cgp::buffer<particle_element>& all_particles, float dt)

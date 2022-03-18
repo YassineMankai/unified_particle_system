@@ -296,9 +296,10 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 	}
 }
 
-// Constraints related to the environment (walls, obstacles && fixed points)
+// Constraints related to the environment (walls, obstacles, fixed points, particle-particle)
 void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_particles, const cgp::buffer<shape_structure>& all_shapes, cgp::buffer<cgp::vec3>& prevX, constraint_structure const& constraint, float dt)
 {
+	// update neighborhood data
 	std::vector<Rgrid> regularGrids;
 	for (int i = 0; i < all_shapes.size(); i++) {
 		regularGrids.push_back(Rgrid());
@@ -315,7 +316,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 		regularGrids[particle.phase].insert(particle.position, i);
 	}
 
-	// env contacts
+	// particle-env contacts
 	int const N = all_particles.size();
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		vec3& v = all_particles[pIndex].velocity;
@@ -330,7 +331,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				vec3 vn = dot(v, wall.normal) * wall.normal;
 				vec3 vpar = v - vn;
 				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; 
-				all_particles[pIndex].nbConstraintTest += 1;
+				all_particles[pIndex].nbConstraintFrictionRestitution += 1;
 			}
 		}
 		for (const auto& sphere : constraint.spheres) {
@@ -342,21 +343,25 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				vec3 vn = dot(v, dir) * dir;
 				vec3 vpar = v - vn;
 				all_particles[pIndex].dx_friction_and_restitution += (-0.7 * vn + 0.4 * vpar - v) * dt; 
-				all_particles[pIndex].nbConstraintTest += 1;
+				all_particles[pIndex].nbConstraintFrictionRestitution += 1;
 			}
 		}
 	}
 
-
-	// particle contact
+	// particle-particle contact
 	for (int p1 = 0; p1 < all_particles.size(); p1++)
 	{
 		particle_element& particle1 = all_particles[p1];
-		float const epsilon = 1e-5f;
-		cgp::buffer<int> neighborhood;
+		
+		// retrieve neighbor particles
+		std::vector<int> neighborhood;
 		for (int i = 0; i < all_shapes.size(); i++) {
-			neighborhood.push_back(regularGrids[i].getNeighborhood(particle1.position));
+			std::vector<int> res = regularGrids[i].getNeighborhood(particle1.position);
+			neighborhood.insert(neighborhood.end(), res.begin(), res.end());
 		}
+
+		// project collision constraint
+		float const epsilon = 1e-5f;
 		for (int i = 0; i < neighborhood.size(); i++)
 		{
 			int p2 = neighborhood[i];
@@ -368,14 +373,16 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				vec3 u = (particle1.position - particle2.position) / detection;
 				float diff = 0.01f * 2 - detection;
 				vec3 dx = (epsilon + diff / 2.0) * u;
+				
 				particle1.dx += dx;
 				particle2.dx += -dx;
 
 				particle1.nbConstraint += 1;
 				particle2.nbConstraint += 1;
-				particle1.nbConstraintTest += 1;
-				particle2.nbConstraintTest += 1;
 				
+				particle1.nbConstraintFrictionRestitution += 1;
+				particle2.nbConstraintFrictionRestitution += 1;
+
 				if (norm(dx) > 0.005 * dt) {
 					float projected_correction = dot(dx, u);
 					particle1.dx_friction_and_restitution += projected_correction * u;
@@ -396,9 +403,9 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 		if (particle.nbConstraint > 0) {
 			particle.position += particle.dx / particle.nbConstraint;
 			prevX[i] += particle.dx / particle.nbConstraint;
-			if (particle.nbConstraintTest > 0) {
-				prevX[i] -= particle.dx_friction_and_restitution / particle.nbConstraintTest;
-				particle.nbConstraintTest = 0;
+			if (particle.nbConstraintFrictionRestitution > 0) {
+				prevX[i] -= particle.dx_friction_and_restitution / particle.nbConstraintFrictionRestitution;
+				particle.nbConstraintFrictionRestitution = 0;
 				particle.dx_friction_and_restitution = vec3(0, 0, 0);
 			}
 			particle.nbConstraint = 0;

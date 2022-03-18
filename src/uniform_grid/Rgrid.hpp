@@ -17,6 +17,6 @@ private:
 public:
     void initialize(int resolution);
     void insert(vec3 pos, int index);
-    cgp::buffer<int> getNeighborhood(vec3 pos) const;
+    std::vector<int> getNeighborhood(vec3 pos) const;
     void updateMinMax(cgp::vec3 pos);
 };

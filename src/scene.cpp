@@ -54,19 +54,19 @@ void scene_structure::setShapes(DemoScene demoType) {
 		addCloth(3.0f, 4.0f, 4, cgp::vec3(-0.1f, 0.0f, 0.5f), cgp::vec3(0, 0, 0), 1);
 		break;
 	case sc_TRAMPOLINE:
-		parameters.dt = 0.018f;
+		parameters.dt = 0.02f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 10;
-		parameters.N_stabilization = 2;
+		parameters.N_step = 12;
+		parameters.N_stabilization = 4;
 		parameters.N_solver = 2;
-		parameters.clothStiffness = 0.9f;
+		parameters.clothStiffness = 1.2f;
 		constraint.spheres = { {{-1.5f, -0.75f, 0.15f}, 0.15f},
 								{ {-1.5f, -0.25f, 0.15f}, 0.15f},
 								{ {0.2f, 0.0f, 0.3f}, 0.15f},
 								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
 		};
-		addCube(0.8f, 0.8f, 0.8f, cgp::vec3(-0.25f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, 0));
+		addCube(0.8f, 0.8f, 0.8f, cgp::vec3(-0.25f, 0.0f, 0.9f), cgp::vec3(Pi / 4, 0, 0));
 		addCloth(3.0f, 3.0f, 3, cgp::vec3(-0.2f, 0.0f, 0.5f), cgp::vec3(0, Pi / 2 + Pi / 8, 0), 2);
 		break;
 	}
@@ -221,8 +221,8 @@ void scene_structure::display_gui()
 
 	ImGui::Spacing(); ImGui::Spacing();
 
-	ImGui::SliderFloat("alpha", &parameters.alpha, 0.05, 1.5, "%.3f", 1.0f);
-	ImGui::SliderFloat("beta", &parameters.beta, 0.05, 1, "%.3f", 1.0f);
+	ImGui::SliderFloat("alpha", &parameters.alpha, 0.05, 1.5, "%.3g", 1);
+	ImGui::SliderFloat("beta", &parameters.beta, 0.05, 1, "%.3g", 1);
 	ImGui::Spacing();
 	ImGui::SliderFloat("cloth stiffness", &parameters.clothStiffness, 0.01, 1.5f, "%.3f", 1.0f);
 

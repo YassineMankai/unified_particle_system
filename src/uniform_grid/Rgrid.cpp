@@ -32,10 +32,10 @@ void Rgrid::insert(vec3 pos, int index)
     grid[cell].push_back(index);
 }
 
-cgp::buffer<int> Rgrid::getNeighborhood(vec3 pos) const
+std::vector<int> Rgrid::getNeighborhood(vec3 pos) const
 {
     cgp::int3 cell = posToIndex(pos);
-    cgp::buffer<int> res;
+    std::vector<int> res;
 
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -45,7 +45,8 @@ cgp::buffer<int> Rgrid::getNeighborhood(vec3 pos) const
                  && new_cell.y >= 0 && new_cell.y < m_resolution
                  && new_cell.z >= 0 && new_cell.z < m_resolution)
                 {
-                    res.push_back(grid[new_cell]);
+                    for (const int i : grid[new_cell])
+                        res.push_back(i);
                 }
             }
         }

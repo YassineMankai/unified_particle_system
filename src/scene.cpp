@@ -51,7 +51,7 @@ void scene_structure::setShapes(DemoScene demoType) {
 								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
 		};
 		addCube(1.0f, 1.0f, 1.0f, cgp::vec3(0.15f, 0.0f, 0.9f), cgp::vec3(0, Pi / 4, 0));
-		addCloth(3.0f, 4.0f, 4, cgp::vec3(-0.1f, 0.0f, 0.5f), cgp::vec3(0, 0, 0), 1);
+		addCloth(3.0f, 4.0f, 4, cgp::vec3(-0.1f, 0.0f, 0.2f), cgp::vec3(0, 0, 0), 1);
 		break;
 	case sc_TRAMPOLINE:
 		parameters.dt = 0.02f;
@@ -66,8 +66,8 @@ void scene_structure::setShapes(DemoScene demoType) {
 								{ {0.2f, 0.0f, 0.3f}, 0.15f},
 								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
 		};
-		addCube(0.8f, 0.8f, 0.8f, cgp::vec3(-0.25f, 0.0f, 0.9f), cgp::vec3(Pi / 4, 0, 0));
-		addCloth(3.0f, 3.0f, 3, cgp::vec3(-0.2f, 0.0f, 0.5f), cgp::vec3(0, Pi / 2 + Pi / 8, 0), 2);
+		addCube(0.8f, 0.8f, 0.8f, cgp::vec3(-0.25f, 0.0f, 1.2f), cgp::vec3(Pi / 4, Pi / 4, 0));
+		addCloth(3.0f, 3.0f, 3, cgp::vec3(-0.2f, 0.0f, 0.4f), cgp::vec3(0, Pi / 2 + Pi / 12, 0), 2);
 		break;
 	}
 	parameters.sphere3Pos = constraint.spheres[2].center;

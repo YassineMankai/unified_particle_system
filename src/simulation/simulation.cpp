@@ -383,10 +383,9 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				particle1.nbConstraintFrictionRestitution += 1;
 				particle2.nbConstraintFrictionRestitution += 1;
 
-				if (norm(dx) > 0.005 * dt) {
-					float projected_correction = dot(dx, u);
-					particle1.dx_friction_and_restitution += projected_correction * u;
-					particle2.dx_friction_and_restitution += -projected_correction * u;
+				if (norm(dx) > 0.01 * dt) {
+					particle1.dx_friction_and_restitution += dx;
+					particle2.dx_friction_and_restitution += -dx;
 				}
 				else
 				{

@@ -258,13 +258,11 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 		shape_structure& shape = all_shapes[particle.phase];
 		if (shape.type == CLOTH) {
 			vec3& x = particle.position;
-			vec3 dx = vec3(0.0, 0.0, 0.0);
+
 
 			float k = parameters.clothStiffness; //stiffness parameter TODO put it in the parameters of simulation
 			int index1, index2, index3, index4;
 			float L;
-			//int numberOfConstraints = shape.width*shape.height*3; //204
-			int numberOfConstraints = 0; //204
 
 			cgp::buffer<float> Ls = { shape.structLength0,shape.structLength0,shape.structLength0,shape.structLength0,
 									shape.shearLength0,shape.shearLength0 ,shape.shearLength0,shape.shearLength0,
@@ -286,12 +284,13 @@ void simulation_apply_shape_constraints(cgp::buffer<particle_element>& all_parti
 				if (index != -1) {
 					const particle_element& p = all_particles[index];
 					float  distance = norm(p.position - particle.position);
-					dx += k * (distance - Ls[h]) * normalize(p.position - particle.position);
-					numberOfConstraints++;
+					particle.dx += k * (distance - Ls[h]) * normalize(p.position - particle.position);
+					particle.nbConstraint++;
 				}
 			}
-			x += dx / numberOfConstraints;
-
+			x += particle.dx / particle.nbConstraint;
+			particle.nbConstraint = 0;
+			particle.dx = vec3(0, 0, 0);
 		}
 	}
 }
@@ -490,7 +489,7 @@ void simulation_numerical_integration(cgp::buffer<particle_element>& all_particl
 
 		vec3 const& f = all_particles[pIndex].force;
 		float m = all_particles[pIndex].mass;
-		v = v + dt * f / m; //simplification needed
+		v = v + dt * f / m; 
 		x = x + dt * v;
 	}
 

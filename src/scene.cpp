@@ -13,8 +13,8 @@ void scene_structure::setShapes(DemoScene demoType) {
 		parameters.dt = 0.018f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 8;
-		parameters.N_stabilization = 2;
+		parameters.N_step = 6;
+		parameters.N_stabilization = 1;
 		parameters.N_solver = 5;
 		constraint.spheres = { {{-0.22f, 0.0f, 0.15f}, 0.15f},
 								{ {0.22f, 0.0f, 0.15f}, 0.15f},
@@ -27,8 +27,8 @@ void scene_structure::setShapes(DemoScene demoType) {
 		parameters.dt = 0.020f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 8;
-		parameters.N_stabilization = 2;
+		parameters.N_step = 6;
+		parameters.N_stabilization = 1;
 		parameters.N_solver = 5;
 		constraint.spheres = { {{-0.22f, 0.0f, 0.15f}, 0.15f},
 								{ {0.22f, 0.0f, 0.15f}, 0.15f},
@@ -41,9 +41,9 @@ void scene_structure::setShapes(DemoScene demoType) {
 		parameters.dt = 0.020f;
 		parameters.alpha = 0.3f;
 		parameters.beta = 0.15f;
-		parameters.N_step = 8;
-		parameters.N_stabilization = 2;
-		parameters.N_solver = 4;
+		parameters.N_step = 6;
+		parameters.N_stabilization = 1;
+		parameters.N_solver = 3;
 		parameters.clothStiffness = 0.9f;
 		constraint.spheres = { {{-1.5f, -0.75f, 0.15f}, 0.15f},
 								{ {-1.5f, -0.25f, 0.15f}, 0.15f},
@@ -57,7 +57,7 @@ void scene_structure::setShapes(DemoScene demoType) {
 		parameters.dt = 0.02f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 9;
+		parameters.N_step = 8;
 		parameters.N_stabilization = 1;
 		parameters.N_solver = 5;
 		parameters.clothStiffness = 1.1f;

@@ -440,22 +440,6 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 
 				particle1.nbConstraint += 1;
 				particle2.nbConstraint += 1;
-				
-				u = normalize(particle1.position - particle2.position);
-				vec3 relative_displacement = (particle1.position - prevX[p1]) - (particle2.position - prevX[p2]);
-				vec3 rd_normal = dot(relative_displacement, u) * u;
-				vec3 rd_tangential = relative_displacement - rd_normal;
-				float rd_tan_norm = norm(rd_tangential);
-				vec3 friction;
-				if (0.45 * d > rd_tan_norm) {
-					friction = 0.5f * rd_tangential;
-				}
-				else
-				{
-					friction = 0.5f * rd_tangential * std::min(0.5f * d / rd_tan_norm, 1.0f);
-				}
-				particle1.dx -= friction;
-				particle2.dx += friction;
 			}
 		}
 	}

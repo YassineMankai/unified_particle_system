@@ -57,16 +57,16 @@ void scene_structure::setShapes(DemoScene demoType) {
 		parameters.dt = 0.02f;
 		parameters.alpha = 0.8f;
 		parameters.beta = 0.5f;
-		parameters.N_step = 10;
-		parameters.N_stabilization = 2;
+		parameters.N_step = 9;
+		parameters.N_stabilization = 1;
 		parameters.N_solver = 5;
-		parameters.clothStiffness = 0.9f;
+		parameters.clothStiffness = 1.1f;
 		constraint.spheres = { {{-1.5f, -0.75f, 0.15f}, 0.15f},
 								{ {-1.5f, -0.25f, 0.15f}, 0.15f},
 								{ {0.2f, 0.0f, 0.3f}, 0.15f},
 								{ {-1.5f, 0.75f, 0.15f}, 0.15f},
 		};
-		addCube(0.8f, 0.8f, 0.8f, 2, cgp::vec3(-0.25f, 0.0f, 1.2f), cgp::vec3(0, Pi / 4, 0));
+		addCube(0.8f, 0.8f, 0.8f, 2, cgp::vec3(-0.25f, 0.0f, 1.2f), cgp::vec3(0, Pi / 4, Pi / 4));
 		addCloth(3.0f, 3.0f, 2, cgp::vec3(-0.2f, 0.0f, 0.4f), cgp::vec3(0, Pi / 2 + Pi / 12, 0), 2);
 		break;
 	}

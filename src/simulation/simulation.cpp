@@ -362,8 +362,8 @@ void simulation_apply_stabilization_contact_constraints(cgp::buffer<particle_ele
 	for (int i = 0; i < all_particles.size(); i++) {
 		particle_element& particle = all_particles[i];
 		if (particle.nbConstraint > 0) {
-			particle.position += 1.8f * particle.dx / particle.nbConstraint;
-			prevX[i] += particle.dx / particle.nbConstraint;
+			particle.position += 2 * particle.dx / particle.nbConstraint;
+			prevX[i] += 2 * particle.dx / particle.nbConstraint;
 			particle.nbConstraint = 0;
 			particle.dx = vec3(0, 0, 0);
 		}
@@ -393,7 +393,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				all_particles[pIndex].nbConstraint += 1;
 				vec3 vn = dot(v, wall.normal) * wall.normal;
 				vec3 vpar = v - vn;
-				dx += (0.4 * vpar - v) * dt;
+				dx += (-0.3f * vn + 0.5f * vpar - v) * dt;
 			}
 		}
 		for (const auto& sphere : constraint.spheres) {
@@ -404,7 +404,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				all_particles[pIndex].nbConstraint += 1;
 				vec3 vn = dot(v, dir) * dir;
 				vec3 vpar = v - vn;
-				dx += (0.4 * vpar - v) * dt;
+				dx += (-0.3f * vn + 0.5f * vpar - v) * dt;
 			}
 		}
 	}
@@ -446,17 +446,16 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 				vec3 rd_normal = dot(relative_displacement, u) * u;
 				vec3 rd_tangential = relative_displacement - rd_normal;
 				float rd_tan_norm = norm(rd_tangential);
-				vec3 restitution = - 0.3f * rd_normal;
 				vec3 friction;
-				if (0.503 * d > rd_tan_norm) {
+				if (0.45 * d > rd_tan_norm) {
 					friction = 0.5f * rd_tangential;
 				}
 				else
 				{
-					friction = 0.5f * rd_tangential * std::min(0.403f * d / rd_tan_norm, 1.0f);
+					friction = 0.5f * rd_tangential * std::min(0.5f * d / rd_tan_norm, 1.0f);
 				}
-				particle1.dx += friction + restitution;
-				particle2.dx -= (friction + restitution);
+				particle1.dx -= friction;
+				particle2.dx += friction;
 			}
 		}
 	}
@@ -465,7 +464,7 @@ void simulation_apply_contact_constraints(cgp::buffer<particle_element>& all_par
 	for (int i = 0; i < all_particles.size(); i++) {
 		particle_element& particle = all_particles[i];
 		if (particle.nbConstraint > 0) {
-			particle.position += 1.8f * particle.dx / particle.nbConstraint;
+			particle.position += 2 * particle.dx / particle.nbConstraint;
 			particle.nbConstraint = 0;
 			particle.dx = vec3(0, 0, 0);
 		}
@@ -490,7 +489,7 @@ void simulation_compute_force(cgp::buffer<particle_element>& all_particles, cgp:
 	for (int pIndex = 0; pIndex < N; ++pIndex) {
 		all_particles[pIndex].force = all_particles[pIndex].mass * g;
 		if (all_shapes[all_particles[pIndex].phase].type == CLOTH) {
-			all_particles[pIndex].force -= 0.2f * all_particles[pIndex].mass * all_particles[pIndex].velocity; // drag
+			all_particles[pIndex].force -= 0.4f * all_particles[pIndex].mass * all_particles[pIndex].velocity; // drag
 		}
 	}
 }

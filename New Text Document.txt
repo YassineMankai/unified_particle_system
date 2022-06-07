@@ -1,7 +1,0 @@
-scene handles shapes and particules buffer buffer
-scene has method called add shape :
-	append new shape
-	append corresponding particules
- 
-adapt simulate function to handle multiple shape/phases: shape matching/constraints
-shape variable ->scene
